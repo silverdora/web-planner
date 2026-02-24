@@ -11,7 +11,7 @@ interface ITaskRepository
      */
     public function getAll(): array;
     public function getById(int $id): ?Task;
-    public function create(Article $task): Task;
-    public function update(Article $task): bool;
-    public function delete(int $id): bool;
+    public function create(Task $task): Task;
+    public function update(Task $task): bool;
+    public function delete(int $id): void;
 }

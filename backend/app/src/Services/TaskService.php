@@ -8,7 +8,7 @@ use App\Repositories\TaskRepository;
 
 class TaskService implements ITaskService
 {
-    private ITaskService $repository;
+    private ITaskRepository $repository;
 
     public function __construct()
     {
@@ -38,8 +38,8 @@ class TaskService implements ITaskService
         return $this->repository->update($task);
     }
 
-    public function delete(int $id): bool
+    public function delete(int $id): void
     {
-        return $this->repository->delete($id);
+        $this->repository->delete($id);
     }
 }

@@ -6,7 +6,7 @@ use App\Framework\Repository;
 use App\Models\Task;
 use App\Utils\JsonStore;
 
-class TaskRepository implements ITaskRepository
+class TaskRepository extends Repository implements ITaskRepository
 {
     // private JsonStore $store;
     // private const DATA_FILE = __DIR__ . '/../data/articles.json';
@@ -29,7 +29,7 @@ class TaskRepository implements ITaskRepository
 
     public function getById(int $id): ?Task
     {
-        $sql = 'SELECT id, user_id, title, description, category_id, priority, status, due_date FROM task WHERE id = :id'
+        $sql = 'SELECT id, user_id, title, description, category_id, priority, status, due_date FROM task WHERE id = :id';
 
         $stmt = $this->getConnection()->prepare($sql);
         $stmt->bindValue('id', $id, \PDO::PARAM_INT);
@@ -63,28 +63,29 @@ class TaskRepository implements ITaskRepository
 
     public function update(Task $task): bool
     {
-        $sql = 'UPDATE tasks
+    $sql = 'UPDATE tasks
             SET title = :title,
-            description = :description,
-            category_id = :category_id,
-            priority = :priority,
-            status = :status,
-            due_date = :due_date,
+                description = :description,
+                category_id = :category_id,
+                priority = :priority,
+                status = :status,
+                due_date = :due_date
             WHERE id = :id';
 
-        $stmt = $this->getConnection()->prepare($sql);
+    $stmt = $this->getConnection()->prepare($sql);
 
-        $stmt->execute([
-            ':id' => $id,
-            ':title' => $task->title,
-            ':description' => $task->description,
-            ':category_id' => $task->categoryId,
-            ':priority' => $task->priority,
-            ':due_date' => $task->dueDate,
-        ]);
-    }
+    return $stmt->execute([
+        ':id' => $task->id,
+        ':title' => $task->title,
+        ':description' => $task->description,
+        ':category_id' => $task->categoryId,
+        ':priority' => $task->priority,
+        ':status' => $task->status,
+        ':due_date' => $task->dueDate,
+    ]);
+}
 
-    public function delete(int $id): bool
+    public function delete(int $id): void
     {
         $sql = 'DELETE FROM tasks WHERE id = :id';
         $stmt = $this->getConnection()->prepare($sql);

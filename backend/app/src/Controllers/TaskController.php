@@ -7,7 +7,7 @@ use App\Services\ITaskService;
 use App\Services\TaskService;
 use App\Framework\Controller;
 
-class ArticleController extends Controller
+class TaskController extends Controller
 {
     private ITaskService $taskService;
 
@@ -44,11 +44,10 @@ class ArticleController extends Controller
     public function create()
     {
         try {
-            $task = $this->mapPostDataToClass(Article::class);
-            $article = $this->taskService->create($task);
+            $task = $this->mapPostDataToClass(Task::class);
+            $task = $this->taskService->create($task);
             return $this->sendSuccessResponse($task, 201);
         } catch (\Exception $e) {
-            var_dump($e->getMessage());
             return $this->sendErrorResponse('Internal server error', 500);
         }
     }
