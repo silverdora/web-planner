@@ -29,26 +29,25 @@ class TaskRepository extends Repository implements ITaskRepository
 
     public function getById(int $id): ?Task
     {
-        $sql = 'SELECT id, user_id, title, description, category_id, priority, status, due_date FROM task WHERE id = :id';
+        $sql = 'SELECT id, user_id, title, description, category_id, priority, status, due_date FROM tasks WHERE id = :id';
 
         $stmt = $this->getConnection()->prepare($sql);
         $stmt->bindValue('id', $id, \PDO::PARAM_INT);
         $stmt->execute();
 
         $stmt->setFetchMode(\PDO::FETCH_CLASS, '\App\Models\Task');
-        $salon = $stmt->fetch();
+        $task = $stmt->fetch();
 
         return $task ?: null;
     }
 
     public function create(Task $task): Task
     {
-        $sql = 'INSERT INTO tasks (id, user_id, title, description, category_id, priority, status, due_date)
-            VALUES (:id, :user_id, :title, :description, :category_id, :priority, :status, :due_date)';
+        $sql = 'INSERT INTO tasks (user_id, title, description, category_id, priority, status, due_date)
+            VALUES (:user_id, :title, :description, :category_id, :priority, :status, :due_date)';
 
         $stmt = $this->getConnection()->prepare($sql);
         $stmt->execute([
-            ':id' => $task->id,
             ':user_id' => $task->userId,
             ':title' => $task->title,
             ':description' => $task->description,

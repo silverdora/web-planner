@@ -43,7 +43,7 @@
 		  ],
 		  "body": {
 			"mode": "raw",
-			"raw": "{\n  \"user_id\": 1,\n  \"title\": \"New Task Title\",\n  \"description\": \"Task description goes here\",\n  \"category_id\": 2,\n  \"priority\": \"high\",\n  \"status\": \"open\",\n  \"due_date\": \"2025-01-15 18:30:00\"\n}",
+			"raw": "{\n  \"user_id\": 1,\n  \"title\": \"New Task Title\",\n  \"description\": \"Task description goes here\",\n  \"category_id\": 2,\n  \"priority\": 2,\n  \"status\": \"open\",\n  \"due_date\": \"2025-01-15 18:30:00\"\n}",
 			"options": { "raw": { "language": "json" } }
 		  },
 		  "url": {

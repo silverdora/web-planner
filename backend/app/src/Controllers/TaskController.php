@@ -43,13 +43,13 @@ class TaskController extends Controller
 
     public function create()
     {
-        try {
+        // try {
             $task = $this->mapPostDataToClass(Task::class);
             $task = $this->taskService->create($task);
             return $this->sendSuccessResponse($task, 201);
-        } catch (\Exception $e) {
-            return $this->sendErrorResponse('Internal server error', 500);
-        }
+        // } catch (\Exception $e) {
+        //     //return $this->sendErrorResponse('Internal server error', 500);
+        // }
     }
 
     public function update($vars = [])
