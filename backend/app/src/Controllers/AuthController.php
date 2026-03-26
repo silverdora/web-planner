@@ -1,0 +1,114 @@
+<?php
+
+namespace App\Controllers;
+
+use App\Framework\Authentication;
+use App\Models\User;
+use App\Models\UserDTO;
+use App\Exceptions\UserAlreadyExistsException;
+use App\Services\IAuthService;
+use App\Services\AuthService;
+use App\Framework\Controller;
+
+class AuthController extends Controller
+{
+    private IAuthService $authService;
+
+    public function __construct()
+    {
+        $this->authService = new AuthService();
+        parent::__construct();
+    }
+
+
+
+    public function login()
+    {
+        try {
+            $data = $this->getPostData();
+
+            if (!isset($data['email']) || !isset($data['password'])) {
+                return $this->sendErrorResponse('Email and password are required', 400);
+            }
+
+            // call the auth service to authenticate the user
+            $user = $this->authService->authenticate($data['email'], $data['password']);
+
+            if (!$user) {
+                return $this->sendErrorResponse('Invalid credentials', 401);
+            }
+
+            // A DTO is used to return the user data to the client
+            $userDTO = new UserDTO($user);
+            $token = $this->authService->generateToken($user);
+
+            return $this->sendSuccessResponse([
+                'user' => $userDTO,
+                'token' => $token,
+            ]);
+        } catch (\Exception $e) {
+            return $this->sendErrorResponse('Internal server error', 500);
+        }
+    }
+
+    public function register()
+    {
+        try {
+            $user = $this->mapPostDataToClass(User::class);
+
+            // basic, partial validation
+            if (empty($user->email) || empty($user->password) || empty($user->name)) {
+                return $this->sendErrorResponse('Email, username, and password are required', 400);
+            }
+
+            $user = $this->authService->register($user);
+
+            // Return user data (excluding password for security)
+            // DTOs (data transfer objects) are preferred when returning data to the client
+            $userDTO = new UserDTO($user);
+            return $this->sendSuccessResponse($userDTO, 201);
+
+        } catch (UserAlreadyExistsException $e) {
+            return $this->sendErrorResponse($e->getMessage(), 409); // 409: Conflict
+        } catch (\Exception $e) {
+            return $this->sendErrorResponse('Internal server error', 500);
+        }
+    }
+
+    public function currentUser()
+    {
+        try {
+
+            // Get token from Authorization header
+            if(!isset($_SERVER['HTTP_AUTHORIZATION'])) {
+                return $this->sendErrorResponse('Authorization header is required', 401);
+            }
+
+            $authHeader = $_SERVER['HTTP_AUTHORIZATION'];
+            $headerParts = explode(' ', $authHeader);
+            if (count($headerParts) !== 2 || strtolower($headerParts[0]) !== 'bearer') {
+                return $this->sendErrorResponse('Invalid authorization header format', 401);
+            }
+            $token = $headerParts[1];
+
+            $user = $this->authService->getUserFromToken($token);
+
+            if (!$user) {
+                return $this->sendErrorResponse('Invalid or expired token', 401);
+            }
+
+            // Return user DTO
+            $userDTO = new UserDTO($user);
+            return $this->sendSuccessResponse($userDTO);
+        } catch (\Exception $e) {
+            return $this->sendErrorResponse('Internal server error', 500);
+        }
+    }
+
+    public function logout(): void
+    {
+        Authentication::logout();
+        header('Location: /login');
+        exit;
+    }
+}
