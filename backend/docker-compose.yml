@@ -14,6 +14,7 @@ services:
             dockerfile: PHP.Dockerfile
         volumes:
             - ./app:/app
+            - ./php.ini:/usr/local/etc/php/conf.d/uploads.ini
     mysql:
         image: mariadb:latest
         environment:

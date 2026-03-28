@@ -26,7 +26,7 @@ class AuthService implements IAuthService
         if (!$userData) {
             return null;
         }
-        $user = new User($userData);
+        $user = new User($userData['id'], $userData['full_name'], $userData['email'], $userData['password']);
 
         // Verify password against hash
         if (!password_verify($password, $user->password)) {
@@ -63,7 +63,8 @@ class AuthService implements IAuthService
             throw new UserAlreadyExistsException(); // custom exception
         }
 
-        return $this->userRepository->create($user); // create user
+        $this->userRepository->create($user); // create user
+        return $user;
     }
 
     public function generateToken(User $user): string

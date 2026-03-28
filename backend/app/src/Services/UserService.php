@@ -26,10 +26,10 @@ class UserService implements IUserService
         return $this->repository->getByEmail($email);
     }
 
-    public function create(array $user): User
-    {
-        return $this->repository->create($user);
-    }
+//    public function create(array $user): User
+//    {
+//        return $this->repository->create($user);
+//    }
 
     public function update(User $user): bool
     {

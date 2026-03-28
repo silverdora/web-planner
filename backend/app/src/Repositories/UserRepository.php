@@ -30,7 +30,7 @@ class UserRepository extends Repository implements IUserRepository
 
     public function getByEmail(string $email): ?array
     {
-        $sql = 'SELECT id, name, email, password
+        $sql = 'SELECT id, full_name, email, password
                 FROM users
                 WHERE email = :email
                 LIMIT 1';
@@ -42,19 +42,18 @@ class UserRepository extends Repository implements IUserRepository
         return $row ?: null;
     }
 
-    public function create(array $data): User
+    public function create(User $userData): void
     {
         $sql = 'INSERT INTO users (full_name, email, password)
                 VALUES (:name, :email, :password)';
 
         $stmt = $this->getConnection()->prepare($sql);
         $stmt->execute([
-            ':name' => $data['name'],
-            ':email' => $data['email'],
-            ':password' => $data['password'],
+            ':name' => $userData->name,
+            ':email' => $userData->email,
+            ':password' => $userData->password,
         ]);
-
-        return new User($data);
+        $userData->id = (int)$this->getConnection()->lastInsertId();
     }
 
     public function update(int $id, User $user): void

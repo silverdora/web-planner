@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomePage from '../components/pages/HomePage/HomePage.vue'
+import LoginPage from "@/components/pages/LoginPage.vue";
 
 const routes = [
     {
@@ -20,6 +21,11 @@ const routes = [
         component: {
             template: '<h1>Create task page</h1>',
         },
+    },
+    {
+        path: '/login',
+        name: 'Login',
+        component: LoginPage,
     },
 ]
 

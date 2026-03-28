@@ -25,14 +25,20 @@ class AuthController extends Controller
     public function login()
     {
         try {
-            $data = $this->getPostData();
+            $userData = $this->getPostData();
+            $newUser = new User(
+                null,
+                $userData['name'] ?? '',
+                $userData['email'] ?? '',
+                $userData['password'] ?? ''
+            );
 
-            if (!isset($data['email']) || !isset($data['password'])) {
+            if ($userData['email'] === '' || ($userData['password'] === '')) {
                 return $this->sendErrorResponse('Email and password are required', 400);
             }
 
             // call the auth service to authenticate the user
-            $user = $this->authService->authenticate($data['email'], $data['password']);
+            $user = $this->authService->authenticate($userData['email'], $userData['password']);
 
             if (!$user) {
                 return $this->sendErrorResponse('Invalid credentials', 401);
@@ -54,7 +60,14 @@ class AuthController extends Controller
     public function register()
     {
         try {
-            $user = $this->mapPostDataToClass(User::class);
+            $userData = $this->getPostData();
+            $user = new User(
+                null,
+                $userData['name'] ?? '',
+                $userData['email'] ?? '',
+                $userData['password'] ?? ''
+            );
+
 
             // basic, partial validation
             if (empty($user->email) || empty($user->password) || empty($user->name)) {
@@ -70,9 +83,10 @@ class AuthController extends Controller
 
         } catch (UserAlreadyExistsException $e) {
             return $this->sendErrorResponse($e->getMessage(), 409); // 409: Conflict
-        } catch (\Exception $e) {
-            return $this->sendErrorResponse('Internal server error', 500);
         }
+//        catch (\Exception $e) {
+//            return $this->sendErrorResponse('Internal server error', 500);
+//        }
     }
 
     public function currentUser()
