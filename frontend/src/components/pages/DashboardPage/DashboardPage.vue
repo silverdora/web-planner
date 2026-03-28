@@ -1,17 +1,12 @@
 <template>
-  <div class="home">
+  <div class="dashboard-page">
     <div class="container">
-      <h1>Welcome to Web Planner</h1>
-      <p class="subtitle">
-        Organize your tasks, projects, and deadlines in one place.
-      </p>
-      <p class="description">
-        Please log in or create an account to start planning your work.
-      </p>
+      <h1>Web Planner</h1>
+      <p class="subtitle">Organize your tasks, projects, and deadlines in one place.</p>
 
       <div class="buttons">
-        <button @click="goToLogin">Login</button>
-        <button class="secondary" @click="goToRegister">Register</button>
+        <button @click="goToTasks">View Tasks</button>
+        <button class="secondary" @click="goToCreateTask">Create Task</button>
       </div>
     </div>
   </div>
@@ -22,23 +17,22 @@ import { useRouter } from 'vue-router'
 
 const router = useRouter()
 
-const goToLogin = () => {
-  router.push('/login')
+const goToTasks = () => {
+  router.push('/tasks')
 }
 
-const goToRegister = () => {
-  router.push('/register')
+const goToCreateTask = () => {
+  router.push('/tasks/create')
 }
 </script>
 
 <style scoped>
-.home {
-  min-height: 100vh;
+.dashboard-page {
+  min-height: calc(100vh - 64px);
   display: flex;
   align-items: center;
   justify-content: center;
   background: #f5f7fb;
-  font-family: Arial, sans-serif;
   padding: 20px;
 }
 
@@ -48,7 +42,7 @@ const goToRegister = () => {
   padding: 40px;
   border-radius: 16px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-  max-width: 650px;
+  max-width: 600px;
   width: 100%;
 }
 
@@ -61,12 +55,6 @@ h1 {
 .subtitle {
   font-size: 18px;
   color: #666;
-  margin-bottom: 12px;
-}
-
-.description {
-  font-size: 16px;
-  color: #777;
   margin-bottom: 28px;
 }
 

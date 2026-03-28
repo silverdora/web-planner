@@ -1,12 +1,8 @@
-<!--
-  Note: This component is simplified for demonstration purposes.
-  In a production application, this would typically be broken down into smaller,
-  reusable components (e.g., FormInput, Button, ErrorMessage, etc.).
--->
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gray-50">
     <div class="max-w-md w-full bg-white shadow-md rounded-lg p-8">
       <h1 class="text-2xl font-bold mb-6 text-center">Login</h1>
+
       <form @submit.prevent="handleLogin" class="space-y-4">
         <div>
           <label for="email" class="block text-sm font-medium text-gray-700 mb-1">
@@ -21,6 +17,7 @@
               placeholder="Enter your email"
           />
         </div>
+
         <div>
           <label for="password" class="block text-sm font-medium text-gray-700 mb-1">
             Password
@@ -34,9 +31,11 @@
               placeholder="Enter your password"
           />
         </div>
+
         <div v-if="error" class="text-red-600 text-sm">
           {{ error }}
         </div>
+
         <button
             type="submit"
             :disabled="loading"
@@ -45,7 +44,12 @@
           {{ loading ? 'Logging in...' : 'Login' }}
         </button>
       </form>
-      <div class="mt-4 text-center">
+
+      <div class="mt-4 flex flex-col items-center gap-2">
+        <router-link to="/register" class="text-green-600 hover:text-green-800 underline text-sm">
+          Don't have an account? Register
+        </router-link>
+
         <router-link to="/" class="text-blue-600 hover:text-blue-800 underline text-sm">
           Back to Home
         </router-link>
@@ -55,41 +59,41 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
-import axios, { setAuthToken } from '/utils/axios.js';
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import axios, { setAuthToken } from '@/utils/axios.js'
 
-const router = useRouter();
-const email = ref('');
-const password = ref('');
-const loading = ref(false);
-const error = ref('');
+const router = useRouter()
+const email = ref('')
+const password = ref('')
+const loading = ref(false)
+const error = ref('')
 
 const handleLogin = async () => {
-  loading.value = true;
-  error.value = '';
+  loading.value = true
+  error.value = ''
 
   try {
     const response = await axios.post('/auth/login', {
       email: email.value,
       password: password.value,
-    });
+    })
 
     if (response.data.token) {
-      setAuthToken(response.data.token);
-      router.push('/');
+      setAuthToken(response.data.token)
+      router.push('/dashboard')
     } else {
-      error.value = 'No token received from server';
+      error.value = 'No token received from server'
     }
   } catch (err) {
-    console.error('Login error:', err);
+    console.error('Login error:', err)
     if (err.response?.data?.message) {
-      error.value = err.response.data.message;
+      error.value = err.response.data.message
     } else {
-      error.value = 'Login failed. Please check your credentials.';
+      error.value = 'Login failed. Please check your credentials.'
     }
   } finally {
-    loading.value = false;
+    loading.value = false
   }
-};
+}
 </script>
