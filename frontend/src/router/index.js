@@ -5,6 +5,7 @@ import HomePage from '../components/pages/HomePage/HomePage.vue'
 import LoginPage from '../components/pages/LoginPage/LoginPage.vue'
 import RegistrationPage from '../components/pages/RegistrationPage/RegistrationPage.vue'
 import DashboardPage from '../components/pages/DashboardPage/DashboardPage.vue'
+import CreateTaskPage from '../components/pages/CreateTaskPage/CreateTaskPage.vue'
 
 const routes = [
     {
@@ -39,9 +40,15 @@ const routes = [
     {
         path: '/tasks/create',
         name: 'task-create',
+        component: CreateTaskPage,
+        meta: { requiresAuth: true },
+    },
+    {
+        path: '/tasks/:id/edit',
+        name: 'task-edit',
         meta: { requiresAuth: true },
         component: {
-            template: '<div class="p-8 text-2xl font-bold">Create task page</div>',
+            template: '<div class="p-8 text-2xl font-bold">Edit task page</div>',
         },
     },
 ]
@@ -53,10 +60,15 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
     const isLoggedIn = !!getAuthToken()
-    const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
+    const requiresAuth = to.matched.some((record) => record.meta.requiresAuth)
 
     if (requiresAuth && !isLoggedIn) {
         next('/')
+        return
+    }
+
+    if (isLoggedIn && (to.path === '/login' || to.path === '/register')) {
+        next('/dashboard')
         return
     }
 

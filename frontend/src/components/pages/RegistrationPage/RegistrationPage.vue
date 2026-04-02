@@ -1,125 +1,156 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-50">
-    <div class="max-w-md w-full bg-white shadow-md rounded-lg p-8">
-      <h1 class="text-2xl font-bold mb-6 text-center">Register</h1>
+  <AuthLayout>
+    <section class="rounded-3xl border border-gray-200 bg-white p-8 shadow-sm">
+      <Heading :level="1" size="xl" class="text-center">
+        Register
+      </Heading>
 
-      <form @submit.prevent="handleRegister" class="space-y-4">
-        <div>
-          <label for="name" class="block text-sm font-medium text-gray-700 mb-1">
-            Name
-          </label>
-          <input
-              id="name"
-              v-model="name"
-              type="text"
-              required
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-              placeholder="Enter your name"
-          />
-        </div>
+      <Text color="muted" class="mt-2 text-center">
+        Create an account to start managing your planner
+      </Text>
 
-        <div>
-          <label for="email" class="block text-sm font-medium text-gray-700 mb-1">
-            Email
-          </label>
-          <input
-              id="email"
-              v-model="email"
-              type="email"
-              required
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-              placeholder="Enter your email"
-          />
-        </div>
-
-        <div>
-          <label for="password" class="block text-sm font-medium text-gray-700 mb-1">
-            Password
-          </label>
-          <input
-              id="password"
-              v-model="password"
-              type="password"
-              required
-              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500"
-              placeholder="Create a password"
-          />
-        </div>
-
-        <div v-if="error" class="text-red-600 text-sm">
-          {{ error }}
-        </div>
-
-        <button
-            type="submit"
+      <form @submit.prevent="handleRegister" class="mt-6 space-y-4">
+        <FormField
+            id="name"
+            v-model="name"
+            label="Name"
+            type="text"
+            placeholder="Enter your name"
             :disabled="loading"
-            class="w-full bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        />
+
+        <FormField
+            id="email"
+            v-model="email"
+            label="Email"
+            type="email"
+            placeholder="Enter your email"
+            :disabled="loading"
+        />
+
+        <FormField
+            id="password"
+            v-model="password"
+            label="Password"
+            type="password"
+            placeholder="Create a password"
+            :disabled="loading"
+        />
+
+        <FormField
+            id="confirmPassword"
+            v-model="confirmPassword"
+            label="Confirm password"
+            type="password"
+            placeholder="Repeat your password"
+            :disabled="loading"
+        />
+
+        <FeedbackMessage
+            v-if="error"
+            type="error"
+            :message="error"
+        />
+
+        <FeedbackMessage
+            v-if="successMessage"
+            type="success"
+            :message="successMessage"
+        />
+
+        <BaseButton
+            type="submit"
+            variant="secondary"
+            size="lg"
+            :disabled="loading"
+            :full-width="true"
         >
           {{ loading ? 'Registering...' : 'Register' }}
-        </button>
+        </BaseButton>
       </form>
 
-      <div class="mt-4 flex flex-col items-center gap-2">
-        <router-link to="/login" class="text-blue-600 hover:text-blue-800 underline text-sm">
-          Already have an account? Login
+      <div class="mt-6 flex flex-col items-center gap-2">
+        <router-link
+            to="/login"
+            class="text-sm font-medium text-blue-600 underline hover:text-blue-800"
+        >
+          Already have an account? Log in
         </router-link>
 
-        <router-link to="/" class="text-gray-600 hover:text-gray-800 underline text-sm">
+        <router-link
+            to="/"
+            class="text-sm font-medium text-gray-600 underline hover:text-gray-800"
+        >
           Back to Home
         </router-link>
       </div>
-    </div>
-  </div>
+    </section>
+  </AuthLayout>
 </template>
 
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import axios, { setAuthToken } from '@/utils/axios.js'
+import axios from '@/utils/axios.js'
+
+import AuthLayout from '@/components/templates/AuthLayout/AuthLayout.vue'
+import Heading from '@/components/atoms/Heading/Heading.vue'
+import Text from '@/components/atoms/Text/Text.vue'
+import BaseButton from '@/components/atoms/BaseButton/BaseButton.vue'
+import FormField from '@/components/molecules/FormField/FormField.vue'
+import FeedbackMessage from '@/components/molecules/FeedbackMessage/FeedbackMessage.vue'
 
 const router = useRouter()
 
 const name = ref('')
 const email = ref('')
 const password = ref('')
+const confirmPassword = ref('')
 const loading = ref(false)
 const error = ref('')
+const successMessage = ref('')
 
 const handleRegister = async () => {
-  loading.value = true
   error.value = ''
+  successMessage.value = ''
+
+  if (!name.value.trim()) {
+    error.value = 'Name is required.'
+    return
+  }
+
+  if (!email.value.trim()) {
+    error.value = 'Email is required.'
+    return
+  }
+
+  if (!password.value.trim()) {
+    error.value = 'Password is required.'
+    return
+  }
+
+  if (password.value !== confirmPassword.value) {
+    error.value = 'Passwords do not match.'
+    return
+  }
+
+  loading.value = true
 
   try {
-    const response = await axios.post('/auth/register', {
+    await axios.post('/auth/register', {
       name: name.value,
       email: email.value,
       password: password.value,
     })
 
-    if (response.data.token) {
-      setAuthToken(response.data.token)
-      router.push('/dashboard')
-      return
-    }
+    successMessage.value = 'Registration successful. Redirecting to login...'
 
-    const loginResponse = await axios.post('/auth/login', {
-      email: email.value,
-      password: password.value,
-    })
-
-    if (loginResponse.data.token) {
-      setAuthToken(loginResponse.data.token)
-      router.push('/dashboard')
-    } else {
+    setTimeout(() => {
       router.push('/login')
-    }
+    }, 900)
   } catch (err) {
     console.error('Registration error:', err)
-    if (err.response?.data?.message) {
-      error.value = err.response.data.message
-    } else {
-      error.value = 'Registration failed. Please try again.'
-    }
+    error.value = err.response?.data?.message || 'Registration failed. Please try again.'
   } finally {
     loading.value = false
   }

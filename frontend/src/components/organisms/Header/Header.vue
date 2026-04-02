@@ -105,6 +105,8 @@ const router = useRouter()
 
 const handleLogout = () => {
   setAuthToken(null)
-  router.push('/')
+  localStorage.removeItem('user')
+  mobileMenuOpen.value = false
+  router.replace('/')
 }
 </script>
