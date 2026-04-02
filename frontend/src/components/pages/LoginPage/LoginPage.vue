@@ -81,6 +81,11 @@ const handleLogin = async () => {
 
     if (response.data.token) {
       setAuthToken(response.data.token)
+
+      if (response.data.user) {
+        localStorage.setItem('user', JSON.stringify(response.data.user))
+      }
+
       router.push('/dashboard')
     } else {
       error.value = 'No token received from server'

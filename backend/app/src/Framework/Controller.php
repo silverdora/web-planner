@@ -8,6 +8,39 @@ class Controller
     {
     }
 
+    protected function getAuthenticatedUser()
+    {
+        $headers = getallheaders();
+        $authHeader = $headers['Authorization'] ?? $headers['authorization'] ?? null;
+
+        if (!$authHeader || !str_starts_with($authHeader, 'Bearer ')) {
+            return null;
+        }
+
+        $token = substr($authHeader, 7);
+
+        try {
+            $decoded = \Firebase\JWT\JWT::decode(
+                $token,
+                new \Firebase\JWT\Key(\App\Config::$secretKey, 'HS256')
+            );
+
+            $userData = $decoded->data ?? null;
+
+            if (!$userData || !isset($userData->id)) {
+                return null;
+            }
+
+            return (object)[
+                'id' => $userData->id,
+                'email' => $userData->email ?? null,
+                'name' => $userData->name ?? null,
+            ];
+        } catch (\Exception $e) {
+            return null;
+        }
+    }
+
     protected function sendSuccessResponse($data = [], $code = 200)
     {
         header('Content-Type: application/json');

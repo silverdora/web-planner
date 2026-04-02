@@ -1,85 +1,158 @@
 <template>
-  <div class="dashboard-page">
+  <div class="dashboard">
     <div class="container">
-      <h1>Web Planner</h1>
-      <p class="subtitle">Organize your tasks, projects, and deadlines in one place.</p>
+      <h1>My Tasks</h1>
 
-      <div class="buttons">
-        <button @click="goToTasks">View Tasks</button>
-        <button class="secondary" @click="goToCreateTask">Create Task</button>
+      <div v-if="loading" class="info">Loading tasks...</div>
+      <div v-else-if="error" class="error">{{ error }}</div>
+      <div v-else-if="tasks.length === 0" class="info">No tasks found.</div>
+
+      <div v-else class="task-list">
+        <div v-for="task in tasks" :key="task.id" class="task-card">
+          <div class="task-header">
+            <h3>{{ task.title }}</h3>
+            <span class="badge priority">{{ task.priority }}</span>
+          </div>
+
+          <p class="description">{{ task.description || 'No description' }}</p>
+
+          <div class="task-meta">
+            <span>Status: {{ task.status }}</span>
+            <span>Due: {{ formatDate(task.dueDate || task.due_date) }}</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { useRouter } from 'vue-router'
+import { ref, onMounted } from 'vue'
+import axios from '@/utils/axios.js'
 
-const router = useRouter()
+const tasks = ref([])
+const loading = ref(true)
+const error = ref('')
 
-const goToTasks = () => {
-  router.push('/tasks')
+const formatDate = (dateString) => {
+  if (!dateString) return 'No due date'
+  return new Date(dateString).toLocaleString()
 }
 
-const goToCreateTask = () => {
-  router.push('/tasks/create')
+const loadTasks = async () => {
+  loading.value = true
+  error.value = ''
+
+  try {
+    const response = await axios.get('/tasks/dashboard')
+
+    console.log('FULL RESPONSE:', response)
+    console.log('RESPONSE DATA:', response.data)
+
+    const payload = response.data.data ?? response.data
+
+    if (!Array.isArray(payload)) {
+      console.error('Unexpected payload:', payload)
+      error.value = 'Unexpected response from server'
+      tasks.value = []
+      return
+    }
+
+    tasks.value = payload
+  } catch (err) {
+    console.error(err)
+    error.value = err.response?.data?.message || 'Failed to load tasks'
+    tasks.value = []
+  } finally {
+    loading.value = false
+  }
 }
+
+onMounted(() => {
+  loadTasks()
+})
 </script>
 
 <style scoped>
-.dashboard-page {
-  min-height: calc(100vh - 64px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
+.dashboard {
+  min-height: 100vh;
   background: #f5f7fb;
-  padding: 20px;
+  padding: 40px 20px;
+  font-family: Arial, sans-serif;
 }
 
 .container {
-  text-align: center;
-  background: white;
-  padding: 40px;
-  border-radius: 16px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
-  max-width: 600px;
-  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
 }
 
 h1 {
-  font-size: 42px;
-  margin-bottom: 12px;
+  font-size: 36px;
+  margin-bottom: 8px;
   color: #222;
 }
 
 .subtitle {
-  font-size: 18px;
   color: #666;
-  margin-bottom: 28px;
+  margin-bottom: 24px;
 }
 
-.buttons {
+.info {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  color: #555;
+}
+
+.error {
+  background: #fee2e2;
+  color: #b91c1c;
+  padding: 20px;
+  border-radius: 12px;
+}
+
+.task-list {
+  display: grid;
+  gap: 16px;
+}
+
+.task-card {
+  background: white;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+}
+
+.task-header {
   display: flex;
+  justify-content: space-between;
+  align-items: center;
   gap: 12px;
-  justify-content: center;
+}
+
+.task-header h3 {
+  margin: 0;
+  color: #222;
+}
+
+.description {
+  margin: 12px 0;
+  color: #555;
+}
+
+.task-meta {
+  display: flex;
+  gap: 16px;
   flex-wrap: wrap;
+  color: #777;
+  font-size: 14px;
 }
 
-button {
-  padding: 12px 20px;
-  border: none;
-  border-radius: 10px;
-  background: #3b82f6;
-  color: white;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-button:hover {
-  opacity: 0.9;
-}
-
-.secondary {
-  background: #10b981;
+.badge {
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  background: #dbeafe;
+  color: #1d4ed8;
 }
 </style>

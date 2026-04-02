@@ -26,14 +26,8 @@ class AuthController extends Controller
     {
         try {
             $userData = $this->getPostData();
-            $newUser = new User(
-                null,
-                $userData['name'] ?? '',
-                $userData['email'] ?? '',
-                $userData['password'] ?? ''
-            );
 
-            if ($userData['email'] === '' || ($userData['password'] === '')) {
+            if (empty($userData['email']) || empty($userData['password'])) {
                 return $this->sendErrorResponse('Email and password are required', 400);
             }
 
@@ -49,7 +43,7 @@ class AuthController extends Controller
             $token = $this->authService->generateToken($user);
 
             return $this->sendSuccessResponse([
-                'user' => $userDTO,
+                'user' => $userDTO->toArray(),
                 'token' => $token,
             ]);
         } catch (\Exception $e) {

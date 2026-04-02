@@ -4,17 +4,29 @@ namespace App\Repositories;
 
 use App\Framework\Repository;
 use App\Models\Task;
-use App\Utils\JsonStore;
 
 class TaskRepository extends Repository implements ITaskRepository
 {
-    // private JsonStore $store;
-    // private const DATA_FILE = __DIR__ . '/../data/articles.json';
+    public function getByUserId(int $userId): array
+    {
+        $sql = 'SELECT id, user_id, title, description, category_id, priority, status, due_date
+            FROM tasks
+            WHERE user_id = :user_id
+            ORDER BY due_date ASC';
 
-    // public function __construct()
-    // {
-    //     $this->store = new JsonStore(self::DATA_FILE, Task::class);
-    // }
+        $stmt = $this->getConnection()->prepare($sql);
+        $stmt->bindValue(':user_id', $userId, \PDO::PARAM_INT);
+        $stmt->execute();
+
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $tasks = [];
+        foreach ($rows as $row) {
+            $tasks[] = new Task($row);
+        }
+
+        return $tasks;
+    }
 
     /**
      * @return Task[]
@@ -57,7 +69,9 @@ class TaskRepository extends Repository implements ITaskRepository
             ':due_date' => $task->dueDate,
         ]);
 
-        return (int)$this->getConnection()->lastInsertId();
+        $task->id = (int)$this->getConnection()->lastInsertId();
+
+        return $task;
     }
 
     public function update(Task $task): bool

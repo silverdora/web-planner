@@ -6,14 +6,35 @@ use App\Models\Task;
 use App\Services\ITaskService;
 use App\Services\TaskService;
 use App\Framework\Controller;
+use App\Services\UserService;
+use App\Services\IUserService;
 
 class TaskController extends Controller
 {
     private ITaskService $taskService;
+    private IUserService $userService;
 
     public function __construct()
     {
         $this->taskService = new TaskService();
+        $this->userService = new UserService();
+    }
+
+    public function dashboard()
+    {
+        try {
+            $user = $this->getAuthenticatedUser();
+
+            if (!$user) {
+                return $this->sendErrorResponse('Unauthorized', 401);
+            }
+
+            $tasks = $this->taskService->getByUserId($user->id);
+
+            return $this->sendSuccessResponse($tasks);
+        } catch (\Exception $e) {
+            return $this->sendErrorResponse($e->getMessage(), 500);
+        }
     }
 
     public function getAll()
@@ -75,6 +96,4 @@ class TaskController extends Controller
             return $this->sendErrorResponse('Internal server error', 500);
         }
     }
-
-
 }

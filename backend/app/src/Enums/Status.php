@@ -4,8 +4,8 @@ namespace App\Enums;
 
 enum Status: string
 {
-    case ToDo = 'To do';
-    case InProgress = 'In progress';
-    case Done = 'Done';
-    case Cancelled = 'Cancelled';
+    case Created = 'created';
+    case InProgress = 'in progress';
+    case Done = 'done';
+    case Cancelled = 'cancelled';
 }

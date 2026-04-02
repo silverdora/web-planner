@@ -42,6 +42,7 @@ $dispatcher = simpleDispatcher(function (RouteCollector $r) {
     $r->addRoute('POST', '/auth/logout', ['App\Controllers\AuthController', 'logout']);
 
     // Tasks routes
+    $r->addRoute('GET', '/tasks/dashboard', ['App\Controllers\TaskController', 'dashboard']);
     $r->addRoute('GET', '/tasks', ['App\Controllers\TaskController', 'getAll']);
     $r->addRoute('GET', '/tasks/{id}', ['App\Controllers\TaskController', 'get']);
     $r->addRoute('POST', '/tasks', ['App\Controllers\TaskController', 'create']);
