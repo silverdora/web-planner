@@ -1,7 +1,7 @@
 <template>
   <input
       :id="id"
-      :model-value="modelValue"
+      :value="modelValue"
       :type="type"
       :placeholder="placeholder"
       :disabled="disabled"

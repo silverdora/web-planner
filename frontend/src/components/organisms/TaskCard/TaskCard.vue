@@ -2,18 +2,18 @@
   <article class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-md">
     <template v-if="!isEditing">
       <TaskCardHeader
-          :title="task.title"
-          :priority="task.priority || task.priority"
+          :title="taskTitle"
+          :priority="taskPriority"
       />
 
       <p class="mt-3 text-sm text-gray-600">
-        {{ task.description || 'No description' }}
+        {{ taskDescription || 'No description' }}
       </p>
 
       <div class="mt-4">
         <TaskMeta
-            :status="task.status || task.status"
-            :due-date="task.dueDate || task.due_date"
+            :status="taskStatus"
+            :due-date="taskDueDate"
         />
       </div>
 
@@ -100,7 +100,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, watch } from 'vue'
+import { ref, reactive, watch, computed } from 'vue'
 
 import TaskCardHeader from '@/components/molecules/TaskCardHeader/TaskCardHeader.vue'
 import TaskMeta from '@/components/molecules/TaskMeta/TaskMeta.vue'
@@ -193,12 +193,30 @@ const formatForDateTimeLocal = (value) => {
   return `${year}-${month}-${day}T${hours}:${minutes}`
 }
 
+const getTaskValue = (keys, fallback = '') => {
+  for (const key of keys) {
+    const value = props.task?.[key]
+
+    if (value !== undefined && value !== null) {
+      return value
+    }
+  }
+
+  return fallback
+}
+
+const taskTitle = computed(() => String(getTaskValue(['title', 'task_title'], '')))
+const taskDescription = computed(() => String(getTaskValue(['description', 'task_description'], '')))
+const taskDueDate = computed(() => getTaskValue(['dueDate', 'due_date'], ''))
+const taskPriority = computed(() => getTaskValue(['priority'], ''))
+const taskStatus = computed(() => getTaskValue(['status'], ''))
+
 const resetForm = () => {
-  form.title = props.task.title || ''
-  form.description = props.task.description || ''
-  form.due_date = formatForDateTimeLocal(props.task.dueDate || props.task.due_date)
-  form.priority = normalizePriority(props.task.priority || props.task.priority)
-  form.status = normalizeStatus(props.task.status || props.task.status)
+  form.title = taskTitle.value
+  form.description = taskDescription.value
+  form.due_date = formatForDateTimeLocal(taskDueDate.value)
+  form.priority = normalizePriority(taskPriority.value)
+  form.status = normalizeStatus(taskStatus.value)
   localError.value = ''
 }
 
