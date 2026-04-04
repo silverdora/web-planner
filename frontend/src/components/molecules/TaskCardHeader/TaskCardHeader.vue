@@ -4,9 +4,15 @@
       {{ title }}
     </h3>
 
-    <Badge :variant="priorityVariant" size="sm">
-      {{ priorityLabel }}
-    </Badge>
+    <div class="flex flex-wrap items-center justify-end gap-2">
+      <Badge v-if="categoryLabel" variant="secondary" size="sm">
+        {{ categoryLabel }}
+      </Badge>
+
+      <Badge :variant="priorityVariant" size="sm">
+        {{ priorityLabel }}
+      </Badge>
+    </div>
   </div>
 </template>
 
@@ -22,6 +28,10 @@ const props = defineProps({
   priority: {
     type: [String, Number],
     default: 'medium',
+  },
+  category: {
+    type: [String, Number],
+    default: '',
   },
 })
 
@@ -51,5 +61,10 @@ const priorityLabel = computed(() => {
   }
 
   return map[normalizedPriority.value] || props.priority
+})
+
+const categoryLabel = computed(() => {
+  const value = String(props.category ?? '').trim()
+  return value || ''
 })
 </script>

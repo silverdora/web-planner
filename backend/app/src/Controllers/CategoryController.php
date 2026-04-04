@@ -3,7 +3,6 @@
 namespace App\Controllers;
 
 use App\Framework\Controller;
-use App\Models\Category;
 use App\Services\CategoryService;
 use App\Services\ICategoryService;
 
@@ -42,14 +41,10 @@ class CategoryController extends Controller
             }
 
             $id = (int)($vars['id'] ?? 0);
-            $category = $this->categoryService->getById($id);
+            $category = $this->categoryService->getByIdAndUserId($id, $user->id);
 
             if (!$category) {
                 return $this->sendErrorResponse('Category not found', 404);
-            }
-
-            if ((int)$category->userId !== (int)$user->id) {
-                return $this->sendErrorResponse('Forbidden', 403);
             }
 
             return $this->sendSuccessResponse($category);
@@ -69,14 +64,11 @@ class CategoryController extends Controller
 
             $data = $this->getPostData();
 
-            $category = new Category([
-                'name' => $data['name'] ?? '',
-                'user_id' => $user->id,
-            ]);
-
-            $created = $this->categoryService->create($category);
+            $created = $this->categoryService->create($user->id, $data);
 
             return $this->sendSuccessResponse($created, 201);
+        } catch (\InvalidArgumentException $e) {
+            return $this->sendErrorResponse($e->getMessage(), 400);
         } catch (\Exception $e) {
             return $this->sendErrorResponse($e->getMessage(), 500);
         }
@@ -94,15 +86,15 @@ class CategoryController extends Controller
             $id = (int)($vars['id'] ?? 0);
             $data = $this->getPostData();
 
-            $category = new Category([
-                'id' => $id,
-                'name' => $data['name'] ?? '',
-                'user_id' => $user->id,
-            ]);
+            $category = $this->categoryService->update($id, $user->id, $data);
 
-            $this->categoryService->update($category);
+            if (!$category) {
+                return $this->sendErrorResponse('Category not found', 404);
+            }
 
             return $this->sendSuccessResponse($category);
+        } catch (\InvalidArgumentException $e) {
+            return $this->sendErrorResponse($e->getMessage(), 400);
         } catch (\Exception $e) {
             return $this->sendErrorResponse($e->getMessage(), 500);
         }
@@ -118,7 +110,11 @@ class CategoryController extends Controller
             }
 
             $id = (int)($vars['id'] ?? 0);
-            $this->categoryService->delete($id, $user->id);
+            $deleted = $this->categoryService->delete($id, $user->id);
+
+            if (!$deleted) {
+                return $this->sendErrorResponse('Category not found', 404);
+            }
 
             return $this->sendSuccessResponse();
         } catch (\Exception $e) {

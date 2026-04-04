@@ -10,6 +10,7 @@
         :options="options"
         :placeholder="placeholder"
         :disabled="disabled"
+        :required="required"
         :has-error="!!error"
         @update:modelValue="$emit('update:modelValue', $event)"
     />
@@ -50,6 +51,10 @@ defineProps({
     default: '',
   },
   disabled: {
+    type: Boolean,
+    default: false,
+  },
+  required: {
     type: Boolean,
     default: false,
   },

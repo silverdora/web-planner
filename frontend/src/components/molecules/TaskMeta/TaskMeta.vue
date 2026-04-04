@@ -33,13 +33,15 @@ const statusLabel = computed(() => {
   const value = String(props.status).toLowerCase()
 
   const map = {
-    1: 'Pending',
+    1: 'Created',
     2: 'In Progress',
-    3: 'Completed',
-    pending: 'Pending',
+    3: 'Done',
+    created: 'Created',
+    pending: 'Created',
     in_progress: 'In Progress',
     'in progress': 'In Progress',
-    completed: 'Completed',
+    done: 'Done',
+    completed: 'Done',
   }
 
   return map[value] || props.status || 'Unknown'

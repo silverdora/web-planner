@@ -5,6 +5,7 @@
       :type="type"
       :placeholder="placeholder"
       :disabled="disabled"
+      :required="required"
       :class="classes"
       @input="$emit('update:modelValue', $event.target.value)"
   />
@@ -31,6 +32,10 @@ const props = defineProps({
     default: '',
   },
   disabled: {
+    type: Boolean,
+    default: false,
+  },
+  required: {
     type: Boolean,
     default: false,
   },

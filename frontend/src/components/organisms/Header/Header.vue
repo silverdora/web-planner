@@ -94,8 +94,7 @@ defineProps({
     type: Array,
     default: () => [
       { name: 'Dashboard', href: '/dashboard' },
-      { name: 'Tasks', href: '/tasks' },
-      { name: 'Create Task', href: '/tasks/create' },
+      { name: 'Categories', href: '/categories' },
     ],
   },
 })

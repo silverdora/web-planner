@@ -6,6 +6,7 @@ import LoginPage from '../components/pages/LoginPage/LoginPage.vue'
 import RegistrationPage from '../components/pages/RegistrationPage/RegistrationPage.vue'
 import DashboardPage from '../components/pages/DashboardPage/DashboardPage.vue'
 import CreateTaskPage from '../components/pages/CreateTaskPage/CreateTaskPage.vue'
+import CategoriesPage from '../components/pages/CategoriesPage/CategoriesPage.vue'
 
 const routes = [
     {
@@ -41,6 +42,12 @@ const routes = [
         path: '/tasks/create',
         name: 'task-create',
         component: CreateTaskPage,
+        meta: { requiresAuth: true },
+    },
+    {
+        path: '/categories',
+        name: 'categories',
+        component: CategoriesPage,
         meta: { requiresAuth: true },
     },
     {

@@ -47,10 +47,13 @@ class TaskRepository extends Repository implements ITaskRepository
         $stmt->bindValue('id', $id, \PDO::PARAM_INT);
         $stmt->execute();
 
-        $stmt->setFetchMode(\PDO::FETCH_CLASS, '\App\Models\Task');
-        $task = $stmt->fetch();
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
 
-        return $task ?: null;
+        if (!$row) {
+            return null;
+        }
+
+        return new Task($row);
     }
 
     public function create(Task $task): Task

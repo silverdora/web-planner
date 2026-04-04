@@ -4,9 +4,11 @@
         v-for="task in tasks"
         :key="task.id"
         :task="task"
+        :categories="categories"
         :saving="savingTaskId === task.id"
         @delete="$emit('delete', $event)"
         @save-edit="$emit('save-edit', $event)"
+        @change-status="$emit('change-status', $event)"
     />
   </div>
 </template>
@@ -19,11 +21,15 @@ defineProps({
     type: Array,
     default: () => [],
   },
+  categories: {
+    type: Array,
+    default: () => [],
+  },
   savingTaskId: {
     type: [Number, String, null],
     default: null,
   },
 })
 
-defineEmits(['delete', 'save-edit'])
+defineEmits(['delete', 'save-edit', 'change-status'])
 </script>

@@ -86,6 +86,8 @@ const priorityOptions = [
 
 const sortOptions = [
   { value: '', label: 'Default' },
+  { value: 'category_asc', label: 'Category A-Z' },
+  { value: 'category_desc', label: 'Category Z-A' },
   { value: 'due_asc', label: 'Due date ↑' },
   { value: 'due_desc', label: 'Due date ↓' },
   { value: 'title_asc', label: 'Title A-Z' },

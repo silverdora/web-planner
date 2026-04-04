@@ -2,6 +2,7 @@
 
 namespace App\Controllers;
 
+use App\Enums\Status;
 use App\Models\Task;
 use App\Services\ITaskService;
 use App\Services\TaskService;
@@ -77,11 +78,14 @@ class TaskController extends Controller
                 return $this->sendErrorResponse('Invalid request body', 400);
             }
 
-            $task->user_id = $user->id;
+            $task->userId = $user->id;
+            $task->status = Status::Created->value;
 
             $createdTask = $this->taskService->create($task);
 
             return $this->sendSuccessResponse($createdTask, 201);
+        } catch (\InvalidArgumentException $e) {
+            return $this->sendErrorResponse($e->getMessage(), 400);
         } catch (\Exception $e) {
             return $this->sendErrorResponse($e->getMessage(), 500);
         }
@@ -95,6 +99,51 @@ class TaskController extends Controller
             $task->id = $id;
             $this->taskService->update($task);
             return $this->sendSuccessResponse($task);
+        } catch (\InvalidArgumentException $e) {
+            return $this->sendErrorResponse($e->getMessage(), 400);
+        } catch (\Exception $e) {
+            return $this->sendErrorResponse('Internal server error', 500);
+        }
+    }
+
+    public function changeTaskStatus()
+    {
+        try {
+            $user = $this->getAuthenticatedUser();
+
+            if (!$user) {
+                return $this->sendErrorResponse('Unauthorized', 401);
+            }
+
+            $data = $this->getPostData();
+
+            if (!is_array($data)) {
+                return $this->sendErrorResponse('Invalid request body', 400);
+            }
+
+            $taskId = (int)($data['taskId'] ?? $data['task_id'] ?? 0);
+            $status = (string)($data['status'] ?? '');
+
+            if ($taskId <= 0) {
+                return $this->sendErrorResponse('Task ID is required.', 400);
+            }
+
+            $task = $this->taskService->getById($taskId);
+
+            if (!$task) {
+                return $this->sendErrorResponse('Task not found', 404);
+            }
+
+            if ((int)($task->userId ?? 0) !== (int)$user->id) {
+                return $this->sendErrorResponse('Forbidden', 403);
+            }
+
+            $task->status = $status;
+            $this->taskService->update($task);
+
+            return $this->sendSuccessResponse($task);
+        } catch (\InvalidArgumentException $e) {
+            return $this->sendErrorResponse($e->getMessage(), 400);
         } catch (\Exception $e) {
             return $this->sendErrorResponse('Internal server error', 500);
         }

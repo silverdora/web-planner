@@ -16,6 +16,8 @@
               label="Title"
               type="text"
               placeholder="Enter task title"
+              :error="titleError"
+              required
               :disabled="loading"
           />
 
@@ -36,6 +38,8 @@
                 v-model="dueDate"
                 label="Due date"
                 type="datetime-local"
+                :error="dueDateError"
+                required
                 :disabled="loading"
             />
 
@@ -45,20 +49,13 @@
                 label="Priority"
                 :options="priorityOptions"
                 placeholder="Select priority"
+                :error="priorityError"
+                required
                 :disabled="loading"
             />
           </div>
 
           <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
-            <SelectField
-                id="status"
-                v-model="status"
-                label="Status"
-                :options="statusOptions"
-                placeholder="Select status"
-                :disabled="loading"
-            />
-
             <SelectField
                 id="category"
                 v-model="categoryId"
@@ -73,12 +70,6 @@
               v-if="error"
               type="error"
               :message="error"
-          />
-
-          <FeedbackMessage
-              v-if="successMessage"
-              type="success"
-              :message="successMessage"
           />
 
           <div class="flex flex-wrap gap-3">
@@ -117,7 +108,7 @@ import Heading from '@/components/atoms/Heading/Heading.vue'
 import Text from '@/components/atoms/Text/Text.vue'
 import BaseButton from '@/components/atoms/BaseButton/BaseButton.vue'
 import BaseLabel from '@/components/atoms/BaseLabel/BaseLabel.vue'
-import BaseTextarea from '@/components/atoms/BaseTextarea/BaseTextarea.vue'
+import BaseTextarea from '@/components/atoms/BaseTextArea/BaseTextArea.vue'
 import FormField from '@/components/molecules/FormField/FormField.vue'
 import SelectField from '@/components/molecules/SelectField/SelectField.vue'
 import FeedbackMessage from '@/components/molecules/FeedbackMessage/FeedbackMessage.vue'
@@ -128,25 +119,21 @@ const title = ref('')
 const description = ref('')
 const dueDate = ref('')
 const priority = ref('')
-const status = ref('')
 const categoryId = ref('')
 
 const loading = ref(false)
 const categoriesLoading = ref(false)
 const error = ref('')
+const titleError = ref('')
+const dueDateError = ref('')
+const priorityError = ref('')
 const successMessage = ref('')
 const categories = ref([])
 
 const priorityOptions = [
-  { value: '1', label: 'Low' },
-  { value: '2', label: 'Medium' },
-  { value: '3', label: 'High' },
-]
-
-const statusOptions = [
-  { value: '1', label: 'Pending' },
-  { value: '2', label: 'In Progress' },
-  { value: '3', label: 'Completed' },
+  { value: 'low', label: 'Low' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'high', label: 'High' },
 ]
 
 const categoryOptions = computed(() =>
@@ -164,7 +151,9 @@ const loadCategories = async () => {
     const payload = response.data.data ?? response.data
 
     if (!Array.isArray(payload)) {
-      throw new Error('Unexpected categories response')
+      error.value = 'Unexpected categories response'
+      categories.value = []
+      return
     }
 
     categories.value = payload
@@ -179,28 +168,48 @@ const loadCategories = async () => {
 const handleCreateTask = async () => {
   error.value = ''
   successMessage.value = ''
+  titleError.value = ''
+  dueDateError.value = ''
+  priorityError.value = ''
 
   if (!title.value.trim()) {
-    error.value = 'Title is required.'
+    titleError.value = 'Title is required.'
+  }
+
+  if (!dueDate.value) {
+    dueDateError.value = 'Due date is required.'
+  }
+
+  if (!priority.value) {
+    priorityError.value = 'Priority is required.'
+  }
+
+  if (titleError.value || dueDateError.value || priorityError.value) {
+    error.value = 'Please fill in the required fields.'
     return
   }
 
   loading.value = true
 
   try {
-    await axios.post('/tasks', {
+    const response = await axios.post('/tasks', {
       title: title.value.trim(),
       description: description.value.trim(),
       due_date: dueDate.value || null,
       priority: priority.value || null,
-      status: status.value || null,
       category_id: categoryId.value || null,
     })
 
-    successMessage.value = 'Task created successfully.'
+    const createdTask = response.data.data ?? response.data
+    console.log('Task created successfully:', createdTask)
+
+    successMessage.value = `Task "${title.value.trim()}" was created successfully.`
 
     setTimeout(() => {
-      router.push('/dashboard')
+      router.push({
+        name: 'dashboard',
+        query: { created: '1' },
+      })
     }, 700)
   } catch (err) {
     console.error('Create task error:', err)

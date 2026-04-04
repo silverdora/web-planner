@@ -4,6 +4,7 @@
       <TaskCardHeader
           :title="taskTitle"
           :priority="taskPriority"
+          :category="taskCategory"
       />
 
       <p class="mt-3 text-sm text-gray-600">
@@ -16,6 +17,35 @@
             :due-date="taskDueDate"
         />
       </div>
+
+      <div class="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+        <div>
+          <BaseLabel :for-id="`quick-status-${task.id}`">
+            Status
+          </BaseLabel>
+
+          <BaseSelect
+              :id="`quick-status-${task.id}`"
+              v-model="statusDraft"
+              :options="statusOptions"
+              placeholder="Select status"
+              :disabled="saving"
+          />
+        </div>
+
+        <BaseButton
+            variant="secondary"
+            size="sm"
+            :disabled="saving || !statusDraft"
+            @click="changeStatus"
+        >
+          Change status
+        </BaseButton>
+      </div>
+
+      <p v-if="statusError" class="mt-2 text-sm text-red-600">
+        {{ statusError }}
+      </p>
 
       <div class="mt-5 border-t border-gray-100 pt-4">
         <TaskActions
@@ -109,11 +139,17 @@ import FormField from '@/components/molecules/FormField/FormField.vue'
 import SelectField from '@/components/molecules/SelectField/SelectField.vue'
 import BaseLabel from '@/components/atoms/BaseLabel/BaseLabel.vue'
 import BaseTextarea from '@/components/atoms/BaseTextArea/BaseTextArea.vue'
+import BaseSelect from '@/components/atoms/BaseSelect/BaseSelect.vue'
+import BaseButton from '@/components/atoms/BaseButton/BaseButton.vue'
 
 const props = defineProps({
   task: {
     type: Object,
     required: true,
+  },
+  categories: {
+    type: Array,
+    default: () => [],
   },
   saving: {
     type: Boolean,
@@ -121,10 +157,12 @@ const props = defineProps({
   },
 })
 
-const emit = defineEmits(['delete', 'save-edit'])
+const emit = defineEmits(['delete', 'save-edit', 'change-status'])
 
 const isEditing = ref(false)
 const localError = ref('')
+const statusError = ref('')
+const statusDraft = ref('')
 
 const form = reactive({
   title: '',
@@ -135,27 +173,27 @@ const form = reactive({
 })
 
 const priorityOptions = [
-  { value: '1', label: 'Low' },
-  { value: '2', label: 'Medium' },
-  { value: '3', label: 'High' },
+  { value: 'low', label: 'Low' },
+  { value: 'medium', label: 'Medium' },
+  { value: 'high', label: 'High' },
 ]
 
 const statusOptions = [
-  { value: '1', label: 'Created' },
-  { value: '2', label: 'In Progress' },
-  { value: '3', label: 'Completed' },
+  { value: 'created', label: 'Created' },
+  { value: 'in progress', label: 'In Progress' },
+  { value: 'done', label: 'Done' },
 ]
 
 const normalizePriority = (value) => {
   const normalized = String(value ?? '').toLowerCase()
 
   const map = {
-    low: '1',
-    medium: '2',
-    high: '3',
-    '1': '1',
-    '2': '2',
-    '3': '3',
+    low: 'low',
+    medium: 'medium',
+    high: 'high',
+    '1': 'low',
+    '2': 'medium',
+    '3': 'high',
   }
 
   return map[normalized] || ''
@@ -165,13 +203,14 @@ const normalizeStatus = (value) => {
   const normalized = String(value ?? '').toLowerCase()
 
   const map = {
-    created: '1',
-    in_progress: '2',
-    'in progress': '2',
-    completed: '3',
-    '1': '1',
-    '2': '2',
-    '3': '3',
+    created: 'created',
+    in_progress: 'in progress',
+    'in progress': 'in progress',
+    completed: 'done',
+    done: 'done',
+    '1': 'created',
+    '2': 'in progress',
+    '3': 'done',
   }
 
   return map[normalized] || ''
@@ -205,11 +244,33 @@ const getTaskValue = (keys, fallback = '') => {
   return fallback
 }
 
+const resolveCategoryNameById = (categoryId) => {
+  if (categoryId === undefined || categoryId === null || categoryId === '') {
+    return ''
+  }
+
+  const matched = props.categories.find(
+      (category) => String(category?.id ?? '') === String(categoryId)
+  )
+
+  return String(matched?.name ?? '').trim()
+}
+
 const taskTitle = computed(() => String(getTaskValue(['title', 'task_title'], '')))
 const taskDescription = computed(() => String(getTaskValue(['description', 'task_description'], '')))
 const taskDueDate = computed(() => getTaskValue(['dueDate', 'due_date'], ''))
 const taskPriority = computed(() => getTaskValue(['priority'], ''))
 const taskStatus = computed(() => getTaskValue(['status'], ''))
+const taskCategory = computed(() => {
+  const categoryName = getTaskValue(['category_name', 'categoryName'], '')
+  const directLabel = String(categoryName ?? '').trim()
+  if (directLabel) return directLabel
+
+  const nestedLabel = String(props.task?.category?.name ?? '').trim()
+  if (nestedLabel) return nestedLabel
+
+  return resolveCategoryNameById(getTaskValue(['category_id', 'categoryId'], ''))
+})
 
 const resetForm = () => {
   form.title = taskTitle.value
@@ -217,7 +278,9 @@ const resetForm = () => {
   form.due_date = formatForDateTimeLocal(taskDueDate.value)
   form.priority = normalizePriority(taskPriority.value)
   form.status = normalizeStatus(taskStatus.value)
+  statusDraft.value = normalizeStatus(taskStatus.value)
   localError.value = ''
+  statusError.value = ''
 }
 
 const startEditing = () => {
@@ -252,6 +315,26 @@ const saveEdit = () => {
     },
     onError: (message) => {
       localError.value = message || 'Failed to save task.'
+    },
+  })
+}
+
+const changeStatus = () => {
+  statusError.value = ''
+
+  if (!statusDraft.value) {
+    statusError.value = 'Please choose a status.'
+    return
+  }
+
+  emit('change-status', {
+    id: props.task.id,
+    status: statusDraft.value,
+    onSuccess: () => {
+      statusError.value = ''
+    },
+    onError: (message) => {
+      statusError.value = message || 'Failed to change status.'
     },
   })
 }

@@ -4,6 +4,7 @@
         :tasks="filteredTasks"
         :loading="loading"
         :error="error"
+        :success-message="successMessage"
         :search="search"
         :status="statusFilter"
         :priority="priorityFilter"
@@ -16,14 +17,17 @@
         @update:priority="priorityFilter = $event"
         @update:category="categoryFilter = $event"
         @update:sort="sortBy = $event"
+        @dismiss-success-message="successMessage = ''"
         @delete="handleDeleteTask"
         @save-edit="handleSaveEdit"
+        @change-status="handleChangeStatus"
     />
   </AppLayout>
 </template>
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import axios from '@/utils/axios.js'
 
 import AppLayout from '@/components/templates/AppLayout/AppLayout.vue'
@@ -33,7 +37,11 @@ const tasks = ref([])
 const categories = ref([])
 const loading = ref(true)
 const error = ref('')
+const successMessage = ref('')
 const savingTaskId = ref(null)
+
+const route = useRoute()
+const router = useRouter()
 
 const search = ref('')
 const statusFilter = ref('')
@@ -73,8 +81,37 @@ const normalizePriority = (value) => {
   return map[normalized] || normalized
 }
 
+const formatStatusLabel = (value) => {
+  const normalized = String(value ?? '').trim().toLowerCase()
+
+  const map = {
+    created: 'Created',
+    'in progress': 'In Progress',
+    in_progress: 'In Progress',
+    done: 'Done',
+    completed: 'Done',
+    cancelled: 'Cancelled',
+  }
+
+  return map[normalized] || String(value ?? '').trim()
+}
+
 const getTaskCategoryId = (task) => {
   return String(task.category_id ?? task.categoryId ?? '')
+}
+
+const getTaskCategoryName = (task) => {
+  const directName = String(task.category_name ?? task.categoryName ?? task.category?.name ?? '').trim()
+  if (directName) return directName
+
+  const categoryId = getTaskCategoryId(task)
+  if (!categoryId) return ''
+
+  const matchedCategory = categories.value.find(
+      (category) => String(category.id) === categoryId
+  )
+
+  return String(matchedCategory?.name ?? '').trim()
 }
 
 const filteredTasks = computed(() => {
@@ -118,6 +155,22 @@ const filteredTasks = computed(() => {
       const aDate = a.dueDate || a.due_date
       const bDate = b.dueDate || b.due_date
       return new Date(bDate || 0) - new Date(aDate || 0)
+    })
+  }
+
+  if (sortBy.value === 'category_asc') {
+    result.sort((a, b) => {
+      const categoryCompare = getTaskCategoryName(a).localeCompare(getTaskCategoryName(b))
+      if (categoryCompare !== 0) return categoryCompare
+      return String(a.title ?? '').localeCompare(String(b.title ?? ''))
+    })
+  }
+
+  if (sortBy.value === 'category_desc') {
+    result.sort((a, b) => {
+      const categoryCompare = getTaskCategoryName(b).localeCompare(getTaskCategoryName(a))
+      if (categoryCompare !== 0) return categoryCompare
+      return String(a.title ?? '').localeCompare(String(b.title ?? ''))
     })
   }
 
@@ -174,6 +227,21 @@ const loadDashboardData = async () => {
   }
 }
 
+const applyRouteSuccessMessage = async () => {
+  const created = route.query.created
+
+  if (created) {
+    successMessage.value = 'Task created successfully.'
+
+    const { created: _created, ...query } = route.query
+
+    await router.replace({
+      name: route.name || 'dashboard',
+      query,
+    })
+  }
+}
+
 const handleDeleteTask = async (task) => {
   const confirmed = window.confirm(`Delete task "${task.title}"?`)
   if (!confirmed) return
@@ -218,5 +286,46 @@ const handleSaveEdit = async ({ id, payload, onSuccess, onError }) => {
   }
 }
 
-onMounted(loadDashboardData)
+const handleChangeStatus = async ({ id, status, onSuccess, onError }) => {
+  savingTaskId.value = id
+  error.value = ''
+
+  try {
+    const response = await axios.put('/tasks/change-status', {
+      taskId: id,
+      status,
+    })
+
+    const updatedTask = response.data.data ?? response.data
+    const index = tasks.value.findIndex((task) => task.id === id)
+
+    if (index !== -1) {
+      tasks.value[index] = {
+        ...tasks.value[index],
+        status,
+        ...(typeof updatedTask === 'object' && updatedTask !== null ? updatedTask : {}),
+      }
+    }
+
+    successMessage.value = `Task status changed to ${formatStatusLabel(status)}.`
+
+    if (onSuccess) onSuccess()
+  } catch (err) {
+    console.error('Change task status error:', err)
+    const message =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        err.message ||
+        'Failed to change task status'
+
+    if (onError) onError(message)
+  } finally {
+    savingTaskId.value = null
+  }
+}
+
+onMounted(async () => {
+  await applyRouteSuccessMessage()
+  await loadDashboardData()
+})
 </script>
