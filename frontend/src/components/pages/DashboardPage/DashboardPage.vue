@@ -45,13 +45,14 @@ const normalizeStatus = (value) => {
   const normalized = String(value ?? '').toLowerCase()
 
   const map = {
-    '1': 'pending',
+    '1': 'created',
     '2': 'in progress',
-    '3': 'completed',
-    pending: 'pending',
+    '3': 'done',
+    created: 'created',
     in_progress: 'in progress',
     'in progress': 'in progress',
-    completed: 'completed',
+    completed: 'done',
+    done: 'done',
   }
 
   return map[normalized] || normalized
@@ -88,13 +89,13 @@ const filteredTasks = computed(() => {
 
   if (statusFilter.value) {
     result = result.filter((task) =>
-        normalizeStatus(task.status || task.status_id) === statusFilter.value
+        normalizeStatus(task.status || task.status) === statusFilter.value
     )
   }
 
   if (priorityFilter.value) {
     result = result.filter((task) =>
-        normalizePriority(task.priority || task.priority_id) === priorityFilter.value
+        normalizePriority(task.priority || task.priority) === priorityFilter.value
     )
   }
 
@@ -161,7 +162,11 @@ const loadDashboardData = async () => {
     await Promise.all([loadTasks(), loadCategories()])
   } catch (err) {
     console.error('Dashboard load error:', err)
-    error.value = err.response?.data?.message || err.message || 'Failed to load dashboard data'
+    error.value =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        err.message ||
+        'Failed to load dashboard data'
     tasks.value = []
     categories.value = []
   } finally {
@@ -178,7 +183,10 @@ const handleDeleteTask = async (task) => {
     tasks.value = tasks.value.filter((item) => item.id !== task.id)
   } catch (err) {
     console.error('Delete task error:', err)
-    error.value = err.response?.data?.message || 'Failed to delete task'
+    error.value =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        err.message || 'Failed to delete task'
   }
 }
 

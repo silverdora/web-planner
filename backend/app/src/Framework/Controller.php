@@ -72,18 +72,39 @@ class Controller
      * @param string $className The fully qualified class name
      * @return object|null Returns an instance of the class or null if data is invalid
      */
+
     protected function mapPostDataToClass(string $className): ?object
     {
         $data = $this->getPostData();
+
+        if (!is_array($data)) {
+            return null;
+        }
 
         $instance = new $className();
 
         foreach ($data as $key => $value) {
             if (property_exists($instance, $key)) {
                 $instance->$key = $value;
+                continue;
+            }
+
+            $camelKey = $this->snakeToCamel($key);
+
+            if (property_exists($instance, $camelKey)) {
+                $instance->$camelKey = $value;
             }
         }
 
         return $instance;
+    }
+
+    private function snakeToCamel(string $value): string
+    {
+        return preg_replace_callback(
+            '/_([a-z])/',
+            fn($matches) => strtoupper($matches[1]),
+            $value
+        );
     }
 }

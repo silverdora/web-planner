@@ -64,13 +64,27 @@ class TaskController extends Controller
 
     public function create()
     {
-        // try {
+        try {
+            $user = $this->getAuthenticatedUser();
+
+            if (!$user) {
+                return $this->sendErrorResponse('Unauthorized', 401);
+            }
+
             $task = $this->mapPostDataToClass(Task::class);
-            $task = $this->taskService->create($task);
-            return $this->sendSuccessResponse($task, 201);
-        // } catch (\Exception $e) {
-        //     //return $this->sendErrorResponse('Internal server error', 500);
-        // }
+
+            if (!$task) {
+                return $this->sendErrorResponse('Invalid request body', 400);
+            }
+
+            $task->user_id = $user->id;
+
+            $createdTask = $this->taskService->create($task);
+
+            return $this->sendSuccessResponse($createdTask, 201);
+        } catch (\Exception $e) {
+            return $this->sendErrorResponse($e->getMessage(), 500);
+        }
     }
 
     public function update($vars = [])

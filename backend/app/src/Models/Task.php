@@ -16,12 +16,12 @@ class Task
     public function __construct(array $data = [])
     {
         $this->id = isset($data['id']) && $data['id'] !== '' ? (int)$data['id'] : null;
-        $this->userId = isset($data['user_id']) && $data['user_id'] !== '' ? (int)$data['user_id'] : null;
+        $this->userId = isset($data['user_id']) ? (int)$data['user_id'] : (isset($data['userId']) ? (int)$data['userId'] : null);
         $this->title = $data['title'] ?? '';
         $this->description = $data['description'] ?? '';
-        $this->categoryId = isset($data['category_id']) && $data['category_id'] !== '' ? (int)$data['category_id'] : null;
+        $this->categoryId = isset($data['category_id']) ? (int)$data['category_id'] : (isset($data['categoryId']) ? (int)$data['categoryId'] : null);
         $this->priority = $data['priority'] ?? '';
         $this->status = $data['status'] ?? '';
-        $this->dueDate = $data['due_date'] ?? $data['due_date'] ?? '';
+        $this->dueDate = $data['due_date'] ?? $data['dueDate'] ?? '';
     }
 }

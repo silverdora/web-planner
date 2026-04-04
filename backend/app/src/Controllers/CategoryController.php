@@ -3,92 +3,126 @@
 namespace App\Controllers;
 
 use App\Framework\Controller;
+use App\Models\Category;
 use App\Services\CategoryService;
 use App\Services\ICategoryService;
-use InvalidArgumentException;
 
 class CategoryController extends Controller
 {
     private ICategoryService $categoryService;
+
     public function __construct()
     {
-        $this->categoryService = new CategorxyService();
+        $this->categoryService = new CategoryService();
     }
 
-    public function index(): void
+    public function getAll()
     {
-        $user = $this->getAuthenticatedUser();
-
-        if (!$user) {
-            $this->respondWithError('Unauthorized', 401);
-            return;
-        }
-
-        $categories = $this->categoryService->getByUserId($user->id);
-
-        $this->respond($categories, 200);
-    }
-
-    public function store(): void
-    {
-        $user = $this->getAuthenticatedUser();
-
-        if (!$user) {
-            $this->respondWithError('Unauthorized', 401);
-            return;
-        }
-
-        $data = $this->getJsonInput();
-
         try {
-            $category = $this->categoryService->create($user->id, $data);
-            $this->respond($category, 201);
-        } catch (InvalidArgumentException $e) {
-            $this->respondWithError($e->getMessage(), 400);
-        }
-    }
+            $user = $this->getAuthenticatedUser();
 
-    public function update(int $id): void
-    {
-        $user = $this->getAuthenticatedUser();
-
-        if (!$user) {
-            $this->respondWithError('Unauthorized', 401);
-            return;
-        }
-
-        $data = $this->getJsonInput();
-
-        try {
-            $category = $this->categoryService->update($id, $user->id, $data);
-
-            if (!$category) {
-                $this->respondWithError('Category not found', 404);
-                return;
+            if (!$user) {
+                return $this->sendErrorResponse('Unauthorized', 401);
             }
 
-            $this->respond($category, 200);
-        } catch (InvalidArgumentException $e) {
-            $this->respondWithError($e->getMessage(), 400);
+            $categories = $this->categoryService->getByUserId($user->id);
+            return $this->sendSuccessResponse($categories);
+        } catch (\Exception $e) {
+            return $this->sendErrorResponse($e->getMessage(), 500);
         }
     }
 
-    public function destroy(int $id): void
+    public function get($vars = [])
     {
-        $user = $this->getAuthenticatedUser();
+        try {
+            $user = $this->getAuthenticatedUser();
 
-        if (!$user) {
-            $this->respondWithError('Unauthorized', 401);
-            return;
+            if (!$user) {
+                return $this->sendErrorResponse('Unauthorized', 401);
+            }
+
+            $id = (int)($vars['id'] ?? 0);
+            $category = $this->categoryService->getById($id);
+
+            if (!$category) {
+                return $this->sendErrorResponse('Category not found', 404);
+            }
+
+            if ((int)$category->userId !== (int)$user->id) {
+                return $this->sendErrorResponse('Forbidden', 403);
+            }
+
+            return $this->sendSuccessResponse($category);
+        } catch (\Exception $e) {
+            return $this->sendErrorResponse($e->getMessage(), 500);
         }
+    }
 
-        $deleted = $this->categoryService->delete($id, $user->id);
+    public function create()
+    {
+        try {
+            $user = $this->getAuthenticatedUser();
 
-        if (!$deleted) {
-            $this->respondWithError('Category not found', 404);
-            return;
+            if (!$user) {
+                return $this->sendErrorResponse('Unauthorized', 401);
+            }
+
+            $data = $this->getPostData();
+
+            $category = new Category([
+                'name' => $data['name'] ?? '',
+                'user_id' => $user->id,
+            ]);
+
+            $created = $this->categoryService->create($category);
+
+            return $this->sendSuccessResponse($created, 201);
+        } catch (\Exception $e) {
+            return $this->sendErrorResponse($e->getMessage(), 500);
         }
+    }
 
-        $this->respond(['success' => true], 200);
+    public function update($vars = [])
+    {
+        try {
+            $user = $this->getAuthenticatedUser();
+
+            if (!$user) {
+                return $this->sendErrorResponse('Unauthorized', 401);
+            }
+
+            $id = (int)($vars['id'] ?? 0);
+            $data = $this->getPostData();
+
+            $category = new Category([
+                'id' => $id,
+                'name' => $data['name'] ?? '',
+                'user_id' => $user->id,
+            ]);
+
+            $this->categoryService->update($category);
+
+            return $this->sendSuccessResponse($category);
+        } catch (\Exception $e) {
+            return $this->sendErrorResponse($e->getMessage(), 500);
+        }
+    }
+
+    public function delete($vars = [])
+    {
+        try {
+            $user = $this->getAuthenticatedUser();
+
+            if (!$user) {
+                return $this->sendErrorResponse('Unauthorized', 401);
+            }
+
+            $id = (int)($vars['id'] ?? 0);
+            $this->categoryService->delete($id, $user->id);
+
+            return $this->sendSuccessResponse();
+        } catch (\Exception $e) {
+            return $this->sendErrorResponse($e->getMessage(), 500);
+        }
     }
 }

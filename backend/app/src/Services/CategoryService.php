@@ -7,7 +7,7 @@ use App\Repositories\CategoryRepository;
 use App\Repositories\ICategoryRepository;
 use InvalidArgumentException;
 
-class CategoryService
+class CategoryService implements ICategoryService
 {
     private ICategoryRepository $categoryRepository;
     public function __construct()
@@ -81,4 +81,6 @@ class CategoryService
 
         return true;
     }
+
+
 }

@@ -118,4 +118,5 @@ const categoryOptions = computed(() => [
     label: category.name,
   })),
 ])
+
 </script>

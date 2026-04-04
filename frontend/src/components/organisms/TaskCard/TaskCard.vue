@@ -3,7 +3,7 @@
     <template v-if="!isEditing">
       <TaskCardHeader
           :title="task.title"
-          :priority="task.priority || task.priority_id"
+          :priority="task.priority || task.priority"
       />
 
       <p class="mt-3 text-sm text-gray-600">
@@ -12,7 +12,7 @@
 
       <div class="mt-4">
         <TaskMeta
-            :status="task.status || task.status_id"
+            :status="task.status || task.status"
             :due-date="task.dueDate || task.due_date"
         />
       </div>
@@ -62,7 +62,7 @@
 
           <SelectField
               :id="`priority-${task.id}`"
-              v-model="form.priority_id"
+              v-model="form.priority"
               label="Priority"
               :options="priorityOptions"
               placeholder="Select priority"
@@ -73,7 +73,7 @@
         <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
           <SelectField
               :id="`status-${task.id}`"
-              v-model="form.status_id"
+              v-model="form.status"
               label="Status"
               :options="statusOptions"
               placeholder="Select status"
@@ -108,7 +108,7 @@ import TaskActions from '@/components/molecules/TaskActions/TaskActions.vue'
 import FormField from '@/components/molecules/FormField/FormField.vue'
 import SelectField from '@/components/molecules/SelectField/SelectField.vue'
 import BaseLabel from '@/components/atoms/BaseLabel/BaseLabel.vue'
-import BaseTextarea from '@/components/atoms/BaseTextarea/BaseTextarea.vue'
+import BaseTextarea from '@/components/atoms/BaseTextArea/BaseTextArea.vue'
 
 const props = defineProps({
   task: {
@@ -130,8 +130,8 @@ const form = reactive({
   title: '',
   description: '',
   due_date: '',
-  priority_id: '',
-  status_id: '',
+  priority: '',
+  status: '',
 })
 
 const priorityOptions = [
@@ -146,7 +146,7 @@ const statusOptions = [
   { value: '3', label: 'Completed' },
 ]
 
-const normalizePriorityId = (value) => {
+const normalizePriority = (value) => {
   const normalized = String(value ?? '').toLowerCase()
 
   const map = {
@@ -161,7 +161,7 @@ const normalizePriorityId = (value) => {
   return map[normalized] || ''
 }
 
-const normalizeStatusId = (value) => {
+const normalizeStatus = (value) => {
   const normalized = String(value ?? '').toLowerCase()
 
   const map = {
@@ -197,8 +197,8 @@ const resetForm = () => {
   form.title = props.task.title || ''
   form.description = props.task.description || ''
   form.due_date = formatForDateTimeLocal(props.task.dueDate || props.task.due_date)
-  form.priority_id = normalizePriorityId(props.task.priority || props.task.priority_id)
-  form.status_id = normalizeStatusId(props.task.status || props.task.status_id)
+  form.priority = normalizePriority(props.task.priority || props.task.priority)
+  form.status = normalizeStatus(props.task.status || props.task.status)
   localError.value = ''
 }
 
@@ -226,8 +226,8 @@ const saveEdit = () => {
       title: form.title.trim(),
       description: form.description.trim(),
       due_date: form.due_date || null,
-      priority_id: form.priority_id || null,
-      status_id: form.status_id || null,
+      priority: form.priority || null,
+      status: form.status || null,
     },
     onSuccess: () => {
       isEditing.value = false

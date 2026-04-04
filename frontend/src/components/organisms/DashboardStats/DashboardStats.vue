@@ -22,15 +22,15 @@ const normalizeStatus = (status) => String(status).toLowerCase()
 
 const completedCount = computed(() =>
     props.tasks.filter((task) => {
-      const value = normalizeStatus(task.status || task.status_id)
+      const value = normalizeStatus(task.status || task.status)
       return value === 'completed' || value === '3'
     }).length
 )
 
 const pendingCount = computed(() =>
     props.tasks.filter((task) => {
-      const value = normalizeStatus(task.status || task.status_id)
-      return value !== 'completed' && value !== '3'
+      const value = normalizeStatus(task.status || task.status)
+      return value !== 'done' && value !== '3'
     }).length
 )
 
@@ -39,10 +39,10 @@ const overdueCount = computed(() => {
 
   return props.tasks.filter((task) => {
     const dueDate = task.dueDate || task.due_date
-    const status = normalizeStatus(task.status || task.status_id)
+    const status = normalizeStatus(task.status || task.status)
 
     if (!dueDate) return false
-    if (status === 'completed' || status === '3') return false
+    if (status === 'done' || status === '3') return false
 
     return new Date(dueDate) < now
   }).length

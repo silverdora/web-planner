@@ -41,7 +41,7 @@
 
             <SelectField
                 id="priority"
-                v-model="priorityId"
+                v-model="priority"
                 label="Priority"
                 :options="priorityOptions"
                 placeholder="Select priority"
@@ -52,7 +52,7 @@
           <div class="grid grid-cols-1 gap-5 md:grid-cols-2">
             <SelectField
                 id="status"
-                v-model="statusId"
+                v-model="status"
                 label="Status"
                 :options="statusOptions"
                 placeholder="Select status"
@@ -127,8 +127,8 @@ const router = useRouter()
 const title = ref('')
 const description = ref('')
 const dueDate = ref('')
-const priorityId = ref('')
-const statusId = ref('')
+const priority = ref('')
+const status = ref('')
 const categoryId = ref('')
 
 const loading = ref(false)
@@ -192,8 +192,8 @@ const handleCreateTask = async () => {
       title: title.value.trim(),
       description: description.value.trim(),
       due_date: dueDate.value || null,
-      priority_id: priorityId.value || null,
-      status_id: statusId.value || null,
+      priority: priority.value || null,
+      status: status.value || null,
       category_id: categoryId.value || null,
     })
 
