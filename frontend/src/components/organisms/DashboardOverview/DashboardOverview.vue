@@ -13,10 +13,13 @@
         :search="search"
         :status="status"
         :priority="priority"
+        :category="category"
         :sort="sort"
+        :categories="categories"
         @update:search="$emit('update:search', $event)"
         @update:status="$emit('update:status', $event)"
         @update:priority="$emit('update:priority', $event)"
+        @update:category="$emit('update:category', $event)"
         @update:sort="$emit('update:sort', $event)"
     />
 
@@ -57,44 +60,23 @@ import DashboardStats from '@/components/organisms/DashboardStats/DashboardStats
 import TaskList from '@/components/organisms/TaskList/TaskList.vue'
 
 defineProps({
-  tasks: {
-    type: Array,
-    default: () => [],
-  },
-  loading: {
-    type: Boolean,
-    default: false,
-  },
-  error: {
-    type: String,
-    default: '',
-  },
-  search: {
-    type: String,
-    default: '',
-  },
-  status: {
-    type: String,
-    default: '',
-  },
-  priority: {
-    type: String,
-    default: '',
-  },
-  sort: {
-    type: String,
-    default: '',
-  },
-  savingTaskId: {
-    type: [Number, String, null],
-    default: null,
-  },
+  tasks: { type: Array, default: () => [] },
+  loading: { type: Boolean, default: false },
+  error: { type: String, default: '' },
+  search: { type: String, default: '' },
+  status: { type: String, default: '' },
+  priority: { type: String, default: '' },
+  category: { type: String, default: '' },
+  sort: { type: String, default: '' },
+  categories: { type: Array, default: () => [] },
+  savingTaskId: { type: [Number, String, null], default: null },
 })
 
 defineEmits([
   'update:search',
   'update:status',
   'update:priority',
+  'update:category',
   'update:sort',
   'delete',
   'save-edit',

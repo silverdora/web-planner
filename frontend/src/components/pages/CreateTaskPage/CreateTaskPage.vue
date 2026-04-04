@@ -26,7 +26,6 @@
                 v-model="description"
                 placeholder="Enter task description"
                 :disabled="loading"
-                :has-error="false"
                 :rows="5"
             />
           </div>
@@ -66,7 +65,7 @@
                 label="Category"
                 :options="categoryOptions"
                 placeholder="Select category"
-                :disabled="loading"
+                :disabled="loading || categoriesLoading"
             />
           </div>
 
@@ -87,7 +86,7 @@
                 type="submit"
                 variant="primary"
                 size="lg"
-                :disabled="loading"
+                :disabled="loading || categoriesLoading"
             >
               {{ loading ? 'Creating...' : 'Create Task' }}
             </BaseButton>
@@ -109,7 +108,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from '@/utils/axios.js'
 
@@ -131,9 +130,12 @@ const dueDate = ref('')
 const priorityId = ref('')
 const statusId = ref('')
 const categoryId = ref('')
+
 const loading = ref(false)
+const categoriesLoading = ref(false)
 const error = ref('')
 const successMessage = ref('')
+const categories = ref([])
 
 const priorityOptions = [
   { value: '1', label: 'Low' },
@@ -147,11 +149,32 @@ const statusOptions = [
   { value: '3', label: 'Completed' },
 ]
 
-const categoryOptions = [
-  { value: '1', label: 'Work' },
-  { value: '2', label: 'Study' },
-  { value: '3', label: 'Personal' },
-]
+const categoryOptions = computed(() =>
+    categories.value.map((category) => ({
+      value: String(category.id),
+      label: category.name,
+    }))
+)
+
+const loadCategories = async () => {
+  categoriesLoading.value = true
+
+  try {
+    const response = await axios.get('/categories')
+    const payload = response.data.data ?? response.data
+
+    if (!Array.isArray(payload)) {
+      throw new Error('Unexpected categories response')
+    }
+
+    categories.value = payload
+  } catch (err) {
+    console.error('Load categories error:', err)
+    error.value = err.response?.data?.message || err.message || 'Failed to load categories.'
+  } finally {
+    categoriesLoading.value = false
+  }
+}
 
 const handleCreateTask = async () => {
   error.value = ''
@@ -166,18 +189,18 @@ const handleCreateTask = async () => {
 
   try {
     await axios.post('/tasks', {
-      title: title.value,
-      description: description.value,
+      title: title.value.trim(),
+      description: description.value.trim(),
       due_date: dueDate.value || null,
-      priority: priority.value || null,
-      status: status.value || null,
+      priority_id: priorityId.value || null,
+      status_id: statusId.value || null,
       category_id: categoryId.value || null,
     })
 
     successMessage.value = 'Task created successfully.'
 
     setTimeout(() => {
-      router.push('/tasks')
+      router.push('/dashboard')
     }, 700)
   } catch (err) {
     console.error('Create task error:', err)
@@ -188,6 +211,8 @@ const handleCreateTask = async () => {
 }
 
 const goBack = () => {
-  router.push('/tasks')
+  router.push('/dashboard')
 }
+
+onMounted(loadCategories)
 </script>

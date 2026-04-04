@@ -48,6 +48,13 @@ $dispatcher = simpleDispatcher(function (RouteCollector $r) {
     $r->addRoute('POST', '/tasks', ['App\Controllers\TaskController', 'create']);
     $r->addRoute('PUT', '/tasks/{id}', ['App\Controllers\TaskController', 'update']);
     $r->addRoute('DELETE', '/tasks/{id}', ['App\Controllers\TaskController', 'delete']);
+
+    //Categories routes
+    $r->addRoute('GET', '/categories', ['App\Controllers\CategoryController', 'getAll']);
+    $r->addRoute('GET', '/categories/{id}', ['App\Controllers\CategoryController', 'get']);
+    $r->addRoute('POST', '/categories', ['App\Controllers\CategoryController', 'create']);
+    $r->addRoute('PUT', '/categories/{id}', ['App\Controllers\CategoryController', 'update']);
+    $r->addRoute('DELETE', '/categories/{id}', ['App\Controllers\CategoryController', 'delete']);
 });
 
 

@@ -7,34 +7,38 @@
         :search="search"
         :status="statusFilter"
         :priority="priorityFilter"
+        :category="categoryFilter"
         :sort="sortBy"
+        :categories="categories"
+        :saving-task-id="savingTaskId"
         @update:search="search = $event"
         @update:status="statusFilter = $event"
         @update:priority="priorityFilter = $event"
+        @update:category="categoryFilter = $event"
         @update:sort="sortBy = $event"
-        @edit="handleEditTask"
         @delete="handleDeleteTask"
+        @save-edit="handleSaveEdit"
     />
   </AppLayout>
 </template>
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
-import { useRouter } from 'vue-router'
 import axios from '@/utils/axios.js'
 
 import AppLayout from '@/components/templates/AppLayout/AppLayout.vue'
 import DashboardOverview from '@/components/organisms/DashboardOverview/DashboardOverview.vue'
 
-const router = useRouter()
-
 const tasks = ref([])
+const categories = ref([])
 const loading = ref(true)
 const error = ref('')
+const savingTaskId = ref(null)
 
 const search = ref('')
 const statusFilter = ref('')
 const priorityFilter = ref('')
+const categoryFilter = ref('')
 const sortBy = ref('')
 
 const normalizeStatus = (value) => {
@@ -68,6 +72,10 @@ const normalizePriority = (value) => {
   return map[normalized] || normalized
 }
 
+const getTaskCategoryId = (task) => {
+  return String(task.category_id ?? task.categoryId ?? '')
+}
+
 const filteredTasks = computed(() => {
   let result = [...tasks.value]
 
@@ -79,15 +87,21 @@ const filteredTasks = computed(() => {
   }
 
   if (statusFilter.value) {
-    result = result.filter((task) => {
-      return normalizeStatus(task.status || task.status_id) === statusFilter.value
-    })
+    result = result.filter((task) =>
+        normalizeStatus(task.status || task.status_id) === statusFilter.value
+    )
   }
 
   if (priorityFilter.value) {
-    result = result.filter((task) => {
-      return normalizePriority(task.priority || task.priority_id) === priorityFilter.value
-    })
+    result = result.filter((task) =>
+        normalizePriority(task.priority || task.priority_id) === priorityFilter.value
+    )
+  }
+
+  if (categoryFilter.value) {
+    result = result.filter((task) =>
+        getTaskCategoryId(task) === String(categoryFilter.value)
+    )
   }
 
   if (sortBy.value === 'due_asc') {
@@ -118,37 +132,45 @@ const filteredTasks = computed(() => {
 })
 
 const loadTasks = async () => {
+  const response = await axios.get('/tasks/dashboard')
+  const payload = response.data.data ?? response.data
+
+  if (!Array.isArray(payload)) {
+    throw new Error('Unexpected tasks response')
+  }
+
+  tasks.value = payload
+}
+
+const loadCategories = async () => {
+  const response = await axios.get('/categories')
+  const payload = response.data.data ?? response.data
+
+  if (!Array.isArray(payload)) {
+    throw new Error('Unexpected categories response')
+  }
+
+  categories.value = payload
+}
+
+const loadDashboardData = async () => {
   loading.value = true
   error.value = ''
 
   try {
-    const response = await axios.get('/tasks/dashboard')
-    const payload = response.data.data ?? response.data
-
-    if (!Array.isArray(payload)) {
-      console.error('Unexpected payload:', payload)
-      error.value = 'Unexpected response from server'
-      tasks.value = []
-      return
-    }
-
-    tasks.value = payload
+    await Promise.all([loadTasks(), loadCategories()])
   } catch (err) {
-    console.error('Failed to load tasks:', err)
-    error.value = err.response?.data?.message || 'Failed to load tasks'
+    console.error('Dashboard load error:', err)
+    error.value = err.response?.data?.message || err.message || 'Failed to load dashboard data'
     tasks.value = []
+    categories.value = []
   } finally {
     loading.value = false
   }
 }
 
-const handleEditTask = (task) => {
-  router.push(`/tasks/${task.id}/edit`)
-}
-
 const handleDeleteTask = async (task) => {
   const confirmed = window.confirm(`Delete task "${task.title}"?`)
-
   if (!confirmed) return
 
   try {
@@ -160,5 +182,33 @@ const handleDeleteTask = async (task) => {
   }
 }
 
-onMounted(loadTasks)
+const handleSaveEdit = async ({ id, payload, onSuccess, onError }) => {
+  savingTaskId.value = id
+  error.value = ''
+
+  try {
+    const response = await axios.put(`/tasks/${id}`, payload)
+    const updatedTask = response.data.data ?? response.data
+
+    const index = tasks.value.findIndex((task) => task.id === id)
+
+    if (index !== -1) {
+      tasks.value[index] = {
+        ...tasks.value[index],
+        ...payload,
+        ...(typeof updatedTask === 'object' && updatedTask !== null ? updatedTask : {}),
+      }
+    }
+
+    if (onSuccess) onSuccess()
+  } catch (err) {
+    console.error('Update task error:', err)
+    const message = err.response?.data?.message || 'Failed to update task'
+    if (onError) onError(message)
+  } finally {
+    savingTaskId.value = null
+  }
+}
+
+onMounted(loadDashboardData)
 </script>
