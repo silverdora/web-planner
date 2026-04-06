@@ -8,6 +8,11 @@ class Controller
     {
     }
 
+    /**
+     * Get the authenticated user from the Authorization bearer token.
+     *
+     * @return object|null Simple object with id, email and name, or null if unauthenticated/invalid token.
+     */
     protected function getAuthenticatedUser()
     {
         $headers = getallheaders();
@@ -41,6 +46,14 @@ class Controller
         }
     }
 
+    /**
+     * Send a JSON success response.
+     *
+     * @param mixed $data Payload to serialize as JSON.
+     * @param int   $code HTTP status code, defaults to 200.
+     *
+     * @return void
+     */
     protected function sendSuccessResponse($data = [], $code = 200)
     {
         header('Content-Type: application/json');
@@ -48,6 +61,14 @@ class Controller
         echo json_encode($data, JSON_PRETTY_PRINT);
     }
 
+    /**
+     * Send a JSON error response.
+     *
+     * @param string $message Error message.
+     * @param int    $code    HTTP status code, defaults to 500.
+     *
+     * @return void
+     */
     protected function sendErrorResponse($message, $code = 500)
     {
         header('Content-Type: application/json; charset=utf-8');
@@ -66,6 +87,14 @@ class Controller
         return json_decode($input, true);
     }
 
+    /**
+     * Ensure the request is authenticated and return the user.
+     *
+     * Sends a 401 Unauthorized error response and returns null if no valid
+     * token/user is found.
+     *
+     * @return object|null
+     */
     protected function requireAuth()
     {
         $user = $this->getAuthenticatedUser();

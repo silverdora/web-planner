@@ -18,6 +18,14 @@ class AuthController extends Controller
         parent::__construct();
     }
 
+    /**
+     * Handle user login.
+     *
+     * Reads JSON credentials from the request body, authenticates the user
+     * and returns a JWT token together with a user DTO on success.
+     *
+     * @return void
+     */
     public function login()
     {
         try {
@@ -47,6 +55,13 @@ class AuthController extends Controller
         }
     }
 
+    /**
+     * Handle user registration.
+     *
+     * Creates a new user from JSON payload and returns a DTO on success.
+     *
+     * @return void
+     */
     public function register()
     {
         try {
@@ -79,6 +94,14 @@ class AuthController extends Controller
 //        }
     }
 
+    /**
+     * Logout endpoint.
+     *
+     * This does not invalidate tokens server-side but returns a success
+     * message so the client can clear its local state.
+     *
+     * @return void
+     */
     public function logout()
     {
         return $this->sendSuccessResponse(['message' => 'Logged out']);

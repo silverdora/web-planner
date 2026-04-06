@@ -17,6 +17,11 @@ class TaskController extends Controller
         $this->taskService = new TaskService();
     }
 
+    /**
+     * Get dashboard statistics grouped by category for the authenticated user.
+     *
+     * @return void
+     */
     public function dashboardCategoryStats()
     {
         try {
@@ -33,6 +38,11 @@ class TaskController extends Controller
         }
     }
 
+    /**
+     * Get upcoming tasks for the authenticated user.
+     *
+     * @return void
+     */
     public function upcoming()
     {
         try {
@@ -49,6 +59,13 @@ class TaskController extends Controller
         }
     }
 
+    /**
+     * Get paginated dashboard tasks list for the authenticated user.
+     * Query parameters like search, status, priority, category_id, sort,
+     * page and limit are read from $_GET.
+     *
+     * @return void
+     */
     public function dashboard()
     {
         try {
@@ -77,6 +94,12 @@ class TaskController extends Controller
         }
     }
 
+    /**
+     * Get high-level dashboard statistics (total, done, pending, overdue)
+     * for the authenticated user.
+     *
+     * @return void
+     */
     public function dashboardStats()
     {
         try {
@@ -93,6 +116,13 @@ class TaskController extends Controller
         }
     }
 
+    /**
+     * Get a single task for the authenticated user.
+     *
+     * @param array $vars Route variables, expects 'id'.
+     *
+     * @return void
+     */
     public function get($vars = [])
     {
         try {
@@ -112,6 +142,13 @@ class TaskController extends Controller
         }
     }
 
+    /**
+     * Create a new task for the authenticated user.
+     *
+     * Reads task data from JSON request body.
+     *
+     * @return void
+     */
     public function create()
     {
         try {
@@ -139,6 +176,13 @@ class TaskController extends Controller
         }
     }
 
+    /**
+     * Update an existing task.
+     *
+     * @param array $vars Route variables, expects 'id'.
+     *
+     * @return void
+     */
     public function update($vars = [])
     {
         try {
@@ -178,6 +222,13 @@ class TaskController extends Controller
         }
     }
 
+    /**
+     * Change only the status of a task for the authenticated user.
+     *
+     * Expects JSON with status and taskId/task_id.
+     *
+     * @return void
+     */
     public function changeTaskStatus()
     {
         try {
@@ -216,6 +267,13 @@ class TaskController extends Controller
         }
     }
 
+    /**
+     * Delete a task for the authenticated user.
+     *
+     * @param array $vars Route variables, expects 'id'.
+     *
+     * @return void
+     */
     public function delete($vars = [])
     {
         try {
@@ -237,6 +295,15 @@ class TaskController extends Controller
         }
     }
 
+    /**
+     * Find a task by id ensuring it belongs to the given user.
+     * Sends appropriate error responses if not found or invalid.
+     *
+     * @param int $taskId
+     * @param int $userId
+     *
+     * @return Task|null
+     */
     private function findOwnedTask(int $taskId, int $userId): ?Task
     {
         if ($taskId <= 0) {

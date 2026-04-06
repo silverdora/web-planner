@@ -16,6 +16,10 @@ class CategoryService implements ICategoryService
     }
 
     /**
+     * Get categories for a given user.
+     *
+     * @param int $userId
+     *
      * @return Category[]
      */
     public function getByUserId(int $userId): array
@@ -23,11 +27,29 @@ class CategoryService implements ICategoryService
         return $this->categoryRepository->getByUserId($userId);
     }
 
+    /**
+     * Get a category by id for a specific user.
+     *
+     * @param int $id
+     * @param int $userId
+     *
+     * @return Category|null
+     */
     public function getByIdAndUserId(int $id, int $userId): ?Category
     {
         return $this->categoryRepository->getByIdAndUserId($id, $userId);
     }
 
+    /**
+     * Create a new category for a user.
+     *
+     * @param int   $userId
+     * @param array $data
+     *
+     * @return Category
+     *
+     * @throws InvalidArgumentException
+     */
     public function create(int $userId, array $data): Category
     {
         $name = trim($data['name'] ?? '');
@@ -44,6 +66,17 @@ class CategoryService implements ICategoryService
         return $this->categoryRepository->create($category);
     }
 
+    /**
+     * Update a category for a user.
+     *
+     * @param int   $id
+     * @param int   $userId
+     * @param array $data
+     *
+     * @return Category|null
+     *
+     * @throws InvalidArgumentException
+     */
     public function update(int $id, int $userId, array $data): ?Category
     {
         $category = $this->categoryRepository->getByIdAndUserId($id, $userId);
@@ -69,6 +102,14 @@ class CategoryService implements ICategoryService
         return $category;
     }
 
+    /**
+     * Delete a category for a user.
+     *
+     * @param int $id
+     * @param int $userId
+     *
+     * @return bool True if the category was deleted, false if not found.
+     */
     public function delete(int $id, int $userId): bool
     {
         $category = $this->categoryRepository->getByIdAndUserId($id, $userId);

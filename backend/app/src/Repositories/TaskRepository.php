@@ -7,7 +7,13 @@ use App\Models\Task;
 
 class TaskRepository extends Repository implements ITaskRepository
 {
-
+    /**
+     * Get category statistics for dashboard charts.
+     *
+     * @param int $userId
+     *
+     * @return array
+     */
     public function getDashboardCategoryStats(int $userId): array
     {
         $sql = '
@@ -43,6 +49,13 @@ class TaskRepository extends Repository implements ITaskRepository
         }, $rows);
     }
 
+    /**
+     * Get upcoming tasks by due date for a user.
+     *
+     * @param int $userId
+     *
+     * @return array
+     */
     public function getUpcomingTasks(int $userId): array
     {
         $sql = '
@@ -97,6 +110,15 @@ class TaskRepository extends Repository implements ITaskRepository
 
         return $result;
     }
+
+    /**
+     * Get a task by id ensuring it belongs to the user.
+     *
+     * @param int $id
+     * @param int $userId
+     *
+     * @return Task|null
+     */
     public function getByIdAndUserId(int $id, int $userId): ?Task
     {
         $sql = 'SELECT id, user_id, title, description, category_id, priority, status, due_date
@@ -113,6 +135,14 @@ class TaskRepository extends Repository implements ITaskRepository
         return $row ? new Task($row) : null;
     }
 
+    /**
+     * Get overall task statistics for dashboard.
+     *
+     * @param int   $userId
+     * @param array $filters
+     *
+     * @return array
+     */
     public function getDashboardStats(int $userId, array $filters = []): array
     {
         $sql = '
@@ -196,6 +226,13 @@ class TaskRepository extends Repository implements ITaskRepository
         ];
     }
 
+    /**
+     * Get all tasks for a user.
+     *
+     * @param int $userId
+     *
+     * @return Task[]
+     */
     public function getByUserId(int $userId): array
     {
         $sql = 'SELECT id, user_id, title, description, category_id, priority, status, due_date
@@ -212,6 +249,14 @@ class TaskRepository extends Repository implements ITaskRepository
         return array_map(fn($row) => new Task($row), $rows);
     }
 
+    /**
+     * Get dashboard tasks with filters and pagination.
+     *
+     * @param int   $userId
+     * @param array $filters
+     *
+     * @return Task[]
+     */
     public function getDashboardTasks(int $userId, array $filters): array
     {
         $sql = '
@@ -281,6 +326,14 @@ class TaskRepository extends Repository implements ITaskRepository
         return array_map(fn($row) => new Task($row), $rows);
     }
 
+    /**
+     * Count tasks for dashboard pagination.
+     *
+     * @param int   $userId
+     * @param array $filters
+     *
+     * @return int
+     */
     public function countDashboardTasks(int $userId, array $filters): int
     {
         $sql = 'SELECT COUNT(*) FROM tasks WHERE user_id = :user_id';
@@ -323,6 +376,13 @@ class TaskRepository extends Repository implements ITaskRepository
         return (int)$stmt->fetchColumn();
     }
 
+    /**
+     * Persist a new task.
+     *
+     * @param Task $task
+     *
+     * @return Task
+     */
     public function create(Task $task): Task
     {
         $sql = 'INSERT INTO tasks (user_id, title, description, category_id, priority, status, due_date)
@@ -344,6 +404,13 @@ class TaskRepository extends Repository implements ITaskRepository
         return $task;
     }
 
+    /**
+     * Update an existing task.
+     *
+     * @param Task $task
+     *
+     * @return bool
+     */
     public function update(Task $task): bool
     {
         $sql = 'UPDATE tasks
@@ -369,6 +436,14 @@ class TaskRepository extends Repository implements ITaskRepository
         ]);
     }
 
+    /**
+     * Delete a task for a user by id.
+     *
+     * @param int $id
+     * @param int $userId
+     *
+     * @return void
+     */
     public function delete(int $id, int $userId): void
     {
         $sql = 'DELETE FROM tasks WHERE id = :id AND user_id = :user_id';
@@ -379,3 +454,4 @@ class TaskRepository extends Repository implements ITaskRepository
         $stmt->execute();
     }
 }
+

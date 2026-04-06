@@ -8,6 +8,10 @@ use App\Models\Category;
 class CategoryRepository extends Repository implements ICategoryRepository
 {
     /**
+     * Get all categories owned by the given user.
+     *
+     * @param int $userId
+     *
      * @return Category[]
      */
     public function getByUserId(int $userId): array
@@ -32,6 +36,8 @@ class CategoryRepository extends Repository implements ICategoryRepository
     }
 
     /**
+     * Get all categories.
+     *
      * @return Category[]
      */
     public function getAll(): array
@@ -49,6 +55,13 @@ class CategoryRepository extends Repository implements ICategoryRepository
         return $categories;
     }
 
+    /**
+     * Get a category by id.
+     *
+     * @param int $id
+     *
+     * @return Category|null
+     */
     public function getById(int $id): ?Category
     {
         $sql = 'SELECT id, user_id, name
@@ -64,6 +77,14 @@ class CategoryRepository extends Repository implements ICategoryRepository
         return $row ? new Category($row) : null;
     }
 
+    /**
+     * Get a category by id constrained to a user id.
+     *
+     * @param int $id
+     * @param int $userId
+     *
+     * @return Category|null
+     */
     public function getByIdAndUserId(int $id, int $userId): ?Category
     {
         $sql = 'SELECT id, user_id, name
@@ -81,6 +102,13 @@ class CategoryRepository extends Repository implements ICategoryRepository
         return $row ? new Category($row) : null;
     }
 
+    /**
+     * Create a new category.
+     *
+     * @param Category $category
+     *
+     * @return Category
+     */
     public function create(Category $category): Category
     {
         $sql = 'INSERT INTO categories (user_id, name)
@@ -97,6 +125,13 @@ class CategoryRepository extends Repository implements ICategoryRepository
         return $category;
     }
 
+    /**
+     * Update a category for a specific user.
+     *
+     * @param Category $category
+     *
+     * @return bool
+     */
     public function updateByUserId(Category $category): bool
     {
         $sql = 'UPDATE categories
@@ -113,6 +148,14 @@ class CategoryRepository extends Repository implements ICategoryRepository
         ]);
     }
 
+    /**
+     * Delete a category owned by a specific user.
+     *
+     * @param int $id
+     * @param int $userId
+     *
+     * @return void
+     */
     public function deleteByUserId(int $id, int $userId): void
     {
         $sql = 'DELETE FROM categories

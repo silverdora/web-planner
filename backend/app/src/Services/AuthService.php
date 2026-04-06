@@ -19,6 +19,14 @@ class AuthService implements IAuthService
         $this->userRepository = new UserRepository();
     }
 
+    /**
+     * Authenticate a user by email and password.
+     *
+     * @param string $email
+     * @param string $password
+     *
+     * @return User|null Returns the authenticated user or null on failure.
+     */
     public function authenticate(string $email, string $password): ?User
     {
         $userData = $this->userRepository->getByEmail($email);
@@ -35,6 +43,18 @@ class AuthService implements IAuthService
         return $user;
     }
 
+    /**
+     * Register a new user.
+     *
+     * Hashes the password and persists the user, throwing if the
+     * email already exists.
+     *
+     * @param User $user
+     *
+     * @return User
+     *
+     * @throws UserAlreadyExistsException
+     */
     public function register(User $user): User
     {
         // Hash password before storing
@@ -50,6 +70,13 @@ class AuthService implements IAuthService
         return $user;
     }
 
+    /**
+     * Generate a JWT for the given user.
+     *
+     * @param User $user
+     *
+     * @return string Encoded JWT token.
+     */
     public function generateToken(User $user): string
     {
         $now = time();

@@ -57,8 +57,12 @@ The application includes the following features:
 
 Replace these with the user that actually exists in your database.
 
-#### Test user 
+#### Test user 1
 - login: `annavandertest@example.com`
+- password: `12345678`
+
+#### Test user 2
+- login: `andrey.tikhonov@example.com`
 - password: `12345678`
 
 

@@ -2,7 +2,7 @@
 
 /** 
  * Base repository class to manage database connections.
-*/
+ */
 
 namespace App\Framework;
 
@@ -10,9 +10,19 @@ use App\Config;
 use PDO;
 class Repository
 {
+    /**
+     * Shared PDO connection instance.
+     *
+     * @var PDO|null
+     */
     private static ?PDO $connection = null;
 
-    protected function  getConnection(): PDO 
+    /**
+     * Get (and lazily initialize) the PDO connection.
+     *
+     * @return PDO
+     */
+    protected function  getConnection(): PDO
     {
         if (self::$connection === null) {
             $this->connect();
@@ -20,6 +30,11 @@ class Repository
         return self::$connection;
     }
 
+    /**
+     * Establish the database connection.
+     *
+     * @return void
+     */
     private function connect(): void
     {
         try {

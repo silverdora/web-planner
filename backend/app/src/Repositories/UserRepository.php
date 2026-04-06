@@ -8,6 +8,13 @@ use PDO;
 
 class UserRepository extends Repository implements IUserRepository
 {
+    /**
+     * Get a user entity by its id.
+     *
+     * @param int $id
+     *
+     * @return User|null
+     */
     public function getById(int $id): ?User
     {
         $sql = 'SELECT id, full_name, email, password
@@ -24,6 +31,13 @@ class UserRepository extends Repository implements IUserRepository
         return $user ?: null;
     }
 
+    /**
+     * Find a user row by email.
+     *
+     * @param string $email
+     *
+     * @return array|null Associative array for the row or null if not found.
+     */
     public function getByEmail(string $email): ?array
     {
         $sql = 'SELECT id, full_name, email, password
@@ -38,6 +52,13 @@ class UserRepository extends Repository implements IUserRepository
         return $row ?: null;
     }
 
+    /**
+     * Persist a new user record.
+     *
+     * @param User $userData
+     *
+     * @return void
+     */
     public function create(User $userData): void
     {
         $sql = 'INSERT INTO users (full_name, email, password)
@@ -52,6 +73,14 @@ class UserRepository extends Repository implements IUserRepository
         $userData->id = (int)$this->getConnection()->lastInsertId();
     }
 
+    /**
+     * Update an existing user record.
+     *
+     * @param int  $id
+     * @param User $user
+     *
+     * @return void
+     */
     public function update(int $id, User $user): void
     {
         $sql = 'UPDATE users
@@ -70,6 +99,13 @@ class UserRepository extends Repository implements IUserRepository
         ]);
     }
 
+    /**
+     * Delete a user record by id.
+     *
+     * @param int $id
+     *
+     * @return void
+     */
     public function delete(int $id): void
     {
         $sql = 'DELETE FROM users WHERE id = :id';

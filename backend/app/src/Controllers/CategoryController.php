@@ -15,6 +15,11 @@ class CategoryController extends Controller
         $this->categoryService = new CategoryService();
     }
 
+    /**
+     * Get all categories for the authenticated user.
+     *
+     * @return void
+     */
     public function getAll()
     {
         try {
@@ -30,6 +35,13 @@ class CategoryController extends Controller
         }
     }
 
+    /**
+     * Get a single category for the authenticated user.
+     *
+     * @param array $vars Route variables, expects 'id'.
+     *
+     * @return void
+     */
     public function get($vars = [])
     {
         try {
@@ -54,6 +66,13 @@ class CategoryController extends Controller
         }
     }
 
+    /**
+     * Create a new category for the authenticated user.
+     *
+     * Reads JSON body with category data.
+     *
+     * @return void
+     */
     public function create()
     {
         try {
@@ -77,6 +96,13 @@ class CategoryController extends Controller
         }
     }
 
+    /**
+     * Update a category for the authenticated user.
+     *
+     * @param array $vars Route variables, expects 'id'.
+     *
+     * @return void
+     */
     public function update($vars = [])
     {
         try {
@@ -105,6 +131,13 @@ class CategoryController extends Controller
         }
     }
 
+    /**
+     * Delete a category for the authenticated user.
+     *
+     * @param array $vars Route variables, expects 'id'.
+     *
+     * @return void
+     */
     public function delete($vars = [])
     {
         try {

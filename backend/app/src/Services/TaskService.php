@@ -17,21 +17,51 @@ class TaskService implements ITaskService
         $this->repository = new TaskRepository();
     }
 
+    /**
+     * Get category statistics for the dashboard.
+     *
+     * @param int $userId
+     *
+     * @return array
+     */
     public function getDashboardCategoryStats(int $userId): array
     {
         return $this->repository->getDashboardCategoryStats($userId);
     }
 
+    /**
+     * Get upcoming tasks for a user grouped into overdue, today and week.
+     *
+     * @param int $userId
+     *
+     * @return array
+     */
     public function getUpcomingTasks(int $userId): array
     {
         return $this->repository->getUpcomingTasks($userId);
     }
 
+    /**
+     * Get a task by id for a specific user.
+     *
+     * @param int $id
+     * @param int $userId
+     *
+     * @return Task|null
+     */
     public function getByIdAndUserId(int $id, int $userId): ?Task
     {
         return $this->repository->getByIdAndUserId($id, $userId);
     }
 
+    /**
+     * Get summary dashboard statistics for a user.
+     *
+     * @param int   $userId
+     * @param array $filters Optional filters like search, status, priority, category_id.
+     *
+     * @return array
+     */
     public function getDashboardStats(int $userId, array $filters = []): array
     {
         $status = trim((string)($filters['status'] ?? ''));
@@ -59,12 +89,26 @@ class TaskService implements ITaskService
         return $this->repository->getDashboardStats($userId, $normalizedFilters);
     }
 
-
+    /**
+     * Get all tasks for a given user.
+     *
+     * @param int $userId
+     *
+     * @return Task[]
+     */
     public function getByUserId(int $userId): array
     {
         return $this->repository->getByUserId($userId);
     }
 
+    /**
+     * Get paginated dashboard tasks for a user.
+     *
+     * @param int   $userId
+     * @param array $filters
+     *
+     * @return array
+     */
     public function getDashboardTasks(int $userId, array $filters): array
     {
         $page = max(1, (int)($filters['page'] ?? 1));
@@ -124,23 +168,53 @@ class TaskService implements ITaskService
         ];
     }
 
+    /**
+     * Create a new task.
+     *
+     * @param Task $task
+     *
+     * @return Task
+     */
     public function create(Task $task): Task
     {
         $this->validateTask($task, true);
         return $this->repository->create($task);
     }
 
+    /**
+     * Update an existing task.
+     *
+     * @param Task $task
+     *
+     * @return bool
+     */
     public function update(Task $task): bool
     {
         $this->validateTask($task, false);
         return $this->repository->update($task);
     }
 
+    /**
+     * Delete a task for a user.
+     *
+     * @param int $id
+     * @param int $userId
+     *
+     * @return void
+     */
     public function delete(int $id, int $userId): void
     {
         $this->repository->delete($id, $userId);
     }
 
+    /**
+     * Normalize a status value to internal representation.
+     *
+     * @param string $value
+     * @param bool   $isCreate Whether this is called for create or update.
+     *
+     * @return string
+     */
     private function normalizeStatus(string $value, bool $isCreate): string
     {
         $normalized = strtolower(trim($value));
@@ -174,6 +248,13 @@ class TaskService implements ITaskService
         return $status->value;
     }
 
+    /**
+     * Normalize a priority value to internal representation.
+     *
+     * @param string $value
+     *
+     * @return string
+     */
     private function normalizePriority(string $value): string
     {
         $normalized = strtolower(trim($value));
@@ -200,6 +281,13 @@ class TaskService implements ITaskService
         return $priority->value;
     }
 
+    /**
+     * Normalize various date formats into a standard database format.
+     *
+     * @param string $value
+     *
+     * @return string
+     */
     private function normalizeDueDate(string $value): string
     {
         $value = trim($value);
@@ -220,6 +308,13 @@ class TaskService implements ITaskService
         throw new \InvalidArgumentException('Invalid due date format.');
     }
 
+    /**
+     * Normalize a category id value, allowing null.
+     *
+     * @param int|null $value
+     *
+     * @return int|null
+     */
     private function normalizeCategoryId(?int $value): ?int
     {
         if ($value === null || $value === 0) {
@@ -233,6 +328,14 @@ class TaskService implements ITaskService
         return $value;
     }
 
+    /**
+     * Validate and normalize a Task entity for create or update.
+     *
+     * @param Task $task
+     * @param bool $isCreate
+     *
+     * @return void
+     */
     private function validateTask(Task $task, bool $isCreate): void
     {
         $task->title = trim($task->title);
