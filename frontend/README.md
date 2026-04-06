@@ -1,236 +1,166 @@
-# Frontend
+# Web Planner Frontend
 
-A Vue 3 application built with Vite, Tailwind CSS, and Storybook, following atomic design principles.
+A Vue 3 application for the Web Planner project, built with Vite and Tailwind CSS.
 
-## 🚀 Tech Stack
+The frontend communicates with a PHP REST API and provides the user interface for authentication, task management, filtering, dashboard statistics, upcoming deadlines, and completed task tracking.
 
-- **Vue 3** - Progressive JavaScript framework
-- **Vite** - Frontend build tool
-- **Tailwind CSS v4** - Utility-first CSS framework
-- **Storybook** - Component development and documentation
 
-## 📁 Project Structure
 
-This project follows **Atomic Design** methodology, organizing components into five distinct levels:
+## Tech Stack
 
-```
-src/
-├── assets/           # Global styles and assets
-│   └── main.css      # Tailwind CSS import
-├── components/       # Component library
-│   ├── atoms/        # Basic building blocks (Button, Badge, Text, etc.)
-│   ├── molecules/    # Simple component groups (ArticleMeta, CategoryBadge)
-│   ├── organisms/    # Complex components (ArticleCard, Header, Footer)
-│   ├── templates/    # Page-level layouts (ArticleArchive)
-│   └── pages/        # Specific page instances (ArticleArchivePage)
-├── config.js         # Application configuration
-├── utils/            # Utility functions
-│   └── api.js        # API request helpers
-└── main.js           # Application entry point
-```
+- **Vue 3**
+- **Vite**
+- **Vue Router**
+- **Axios**
+- **Tailwind CSS**
 
-## 🛠️ Setup
+The project follows a component-based structure and uses routing, which are part of the course requirements for the frontend architecture.
 
-### Prerequisites
 
-- Node.js ^20.19.0 or >=22.12.0
-- npm or yarn
+## Project Structure
 
-### Installation
-
-```sh
-npm install
+``` id="3gax4r"
+frontend/
+├── src/
+│   ├── assets/                 # Global styles
+│   ├── components/
+│   │   ├── atoms/              # Basic UI building blocks
+│   │   ├── molecules/          # Small composed UI pieces
+│   │   ├── organisms/          # Larger feature components
+│   │   ├── templates/          # Layout wrappers
+│   │   └── pages/              # Route-based pages
+│   ├── router/                 # Vue Router configuration
+│   ├── utils/                  # Axios and frontend helpers
+│   ├── config.js               # App configuration
+│   ├── App.vue                 # Root application component
+│   └── main.js                 # App entry point
 ```
 
-## 🎯 Available Scripts
+The component structure is based on reusable Vue components and aligns with the course emphasis on logical frontend component architecture.
 
+## Main Pages / Features
+
+The frontend includes:
+
+- Home page
+- Login page
+- Registration page
+- Dashboard page
+- Create task page
+- Categories page
+- Completed tasks page
+
+Routing is configured in Vue Router and protected routes require authentication.
+
+## Authentication
+
+The frontend uses JWT-based authentication.
+
+After login:
+
+1) the token is stored in local storage
+2) authenticated requests automatically include the token in the Authorization header through the Axios instance
+
+Protected routes are checked in the router before navigation.
+
+## Setup
+Prerequisites
+- Node.js
+- npm
+- Installation
+
+Open a terminal in the frontend folder and run: 
+
+`npm install`
+
+## Available Scripts
 ### Development
+`npm run dev`
 
-```sh
-# Start development server
-npm run dev
+Starts the Vite development server.
 
-# Start Storybook
-npm run storybook
-```
+### Production build
+`npm run build`
 
-### Production
+Builds the frontend for production.
 
-```sh
-# Build for production
-npm run build
+### Preview production build
+`npm run preview`
 
-# Preview production build
-npm run preview
+Previews the production build locally.
 
-# Build Storybook
-npm run build-storybook
-```
+## Running the Frontend
 
-## ⚙️ Configuration
+Start the frontend development server:
 
-### API Configuration
+`npm run dev`
 
-The application uses environment variables for configuration. If you are using this outside a local environment and need to change config details, create a `.env` file in the frontend root:
+The application will typically be available at: http://localhost:5173
 
-```env
-# API Domain - Base URL for API requests
-VITE_API_DOMAIN=http://localhost
-```
+## API Configuration
 
-**Note:** In Vite, environment variables must be prefixed with `VITE_` to be exposed to client-side code.
+The frontend uses a central Axios instance for API requests.
 
-The default API domain is `http://localhost`. Update this to match your backend server.
+Example configuration flow:
 
-### Using the Config
+1) base API domain is set in config.js
+2) Axios uses that base URL
+3) JWT token is automatically attached to requests after login
 
-```javascript
-import config from "@/config";
+If needed, update the frontend API domain to match your backend setup.
 
-// Access API domain
-const apiDomain = config.apiDomain; // 'http://localhost'
-```
+## Core Frontend Features
+### Dashboard
 
-## 📡 API Integration
+The dashboard includes:
 
-The project includes a utility module for making API requests:
+- task list
+- statistics
+- upcoming deadlines
+- filtering
+- pagination
+- category statistics
 
-```javascript
-import { get, post, put, del } from "@/utils/api";
+The project proposal explicitly includes upcoming deadlines, progress tracking, statistics, and filtering/pagination as planned functionality.
 
-// GET request
-const response = await get("/articles");
-const articles = await response.json();
+### Upcoming deadlines
 
-// POST request
-const newArticle = await post("/articles", {
-  title: "New Article",
-  author: "John Doe",
-  category: "Technology",
-  published: "2025-01-15",
-  content: "Article content...",
-});
-```
+The dashboard shows:
 
-## 🎨 Component Development
+- overdue tasks
+- tasks due today
+- tasks due in the next 7 days
 
-### Atomic Design Structure
 
-- **Atoms**: Basic building blocks (Button, Badge, Text, Heading, DateDisplay)
-- **Molecules**: Simple component groups (ArticleMeta, CategoryBadge)
-- **Organisms**: Complex components (ArticleCard, ArticleDetail, Header, Footer)
-- **Templates**: Page layouts (ArticleArchive)
-- **Pages**: Specific page instances (ArticleArchivePage)
+### Completed tasks
 
-### Creating Components
+Completed tasks are displayed on a separate page.
 
-1. Place components in the appropriate atomic design folder
-2. Use Tailwind CSS for styling
-3. Create a Storybook story file (`.stories.js`) alongside the component
-4. Follow Vue 3 Composition API with `<script setup>`
+### Categories
 
-### Example Component
+Users can manage categories and assign tasks to them.
 
-```vue
-<template>
-  <div class="p-4 bg-white rounded-lg shadow">
-    <h2 class="text-xl font-bold">{{ title }}</h2>
-    <p class="text-gray-600">{{ content }}</p>
-  </div>
-</template>
+## Component Architecture
 
-<script setup>
-defineProps({
-  title: String,
-  content: String,
-});
-</script>
-```
+The frontend is divided into reusable components such as:
 
-## 📚 Storybook
+- Atoms → buttons, labels, inputs, text, headings, badges
+- Molecules → form fields, feedback messages, task actions, pagination controls
+- Organisms → dashboard overview, grouped task list, upcoming deadlines, category stats, task cards
 
-Storybook is configured for component development and documentation.
+Examples of these reusable UI components exist throughout the project structure.
 
-### Running Storybook
 
-```sh
-npm run storybook
-```
+## Development Notes
 
-Stories are automatically discovered from `src/**/*.stories.@(js|jsx|mjs|ts|tsx)`.
+- The app uses Vue 3 Composition API with `<script setup>`
+- Navigation is handled through Vue Router
+- API requests are handled with Axios
+- Auth token logic is centralized in the Axios utility
+- The app uses a reusable component structure for consistency
 
-### Viewing Components
+## Notes
 
-- Open http://localhost:6006
-- Browse components organized by atomic design level
-- Interact with components using controls
-- View documentation generated from component props
-
-## 🎯 Article Components
-
-The application includes a complete set of article-related components:
-
-### Atoms
-
-- **Badge**: Category labels with variants
-- **DateDisplay**: Formatted date display
-- **Heading**: Semantic headings (h1-h6)
-- **Text**: Text with size, weight, and color options
-
-### Molecules
-
-- **ArticleMeta**: Author and published date display
-- **CategoryBadge**: Category badge with color mapping
-
-### Organisms
-
-- **ArticleCard**: Article preview card for lists
-- **ArticleDetail**: Full article view
-- **Header**: Site navigation header
-- **Footer**: Site footer with links
-
-### Templates
-
-- **ArticleArchive**: Complete archive page layout
-
-### Pages
-
-- **ArticleArchivePage**: Page that fetches and displays articles
-
-## 📝 Development Guidelines
-
-### Code Style
-
-- Use Vue 3 Composition API with `<script setup>`
-- Follow atomic design principles
-- Use Tailwind CSS utility classes
-- Write Storybook stories for all components
-- Use TypeScript-style JSDoc comments
-
-### Best Practices
-
-1. **Component Organization**: Place components in appropriate atomic design folders
-2. **Styling**: Use Tailwind CSS classes, avoid custom CSS when possible
-3. **Props**: Define props with validators and default values
-4. **Events**: Use `defineEmits` for component events
-5. **API Calls**: Use the `api.js` utility functions
-6. **Configuration**: Access config through `config.js`
-
-## 🔧 Recommended IDE Setup
-
-### VS Code
-
-- [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) - Vue language support
-
-### Browser Extensions
-
-- **Chrome/Edge**: [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-- **Firefox**: [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-
-## 📖 Additional Resources
-
-- [Vue 3 Documentation](https://vuejs.org/)
-- [Vite Documentation](https://vite.dev/)
-- [Tailwind CSS Documentation](https://tailwindcss.com/)
-- [Storybook Documentation](https://storybook.js.org/)
-- [Atomic Design Methodology](https://atomicdesign.bradfrost.com/)
+- Make sure the backend API is running before starting the frontend.
+- Authentication and protected routes depend on a valid backend connection.
+- Some features on the dashboard depend on authenticated API endpoints from the backend.
