@@ -6,18 +6,21 @@
 </template>
 
 <script setup>
-import { computed } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import Header from '@/components/organisms/Header/Header.vue'
-import { getAuthToken } from '@/utils/axios.js'
+import { useAuthStore } from '@/stores/auth.js'
 
 const route = useRoute()
+const authStore = useAuthStore()
+
+onMounted(() => {
+  authStore.initialize()
+})
 
 const showHeader = computed(() => {
-  const isLoggedIn = !!getAuthToken()
   const requiresAuth = route.matched.some(record => record.meta.requiresAuth)
-
-  return isLoggedIn && requiresAuth
+  return authStore.isAuthenticated && requiresAuth
 })
 </script>
 

@@ -85,33 +85,19 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import axios, { setAuthToken } from '@/utils/axios.js'
+import { useAuthStore } from '@/stores/auth.js'
 
-defineProps({
-  navigationLinks: {
-    type: Array,
-    default: () => [
-      { name: 'Dashboard', href: '/dashboard' },
-      { name: 'Categories', href: '/categories' },
-    ],
-  },
-})
-
-const mobileMenuOpen = ref(false)
 const router = useRouter()
+const authStore = useAuthStore()
+
+const navigationLinks = [
+  { name: 'Dashboard', href: '/dashboard' },
+  { name: 'Categories', href: '/categories' },
+]
 
 const handleLogout = async () => {
-  try {
-    await axios.post('/auth/logout')
-  } catch (error) {
-    console.error('Logout error:', error)
-  } finally {
-    setAuthToken(null)
-    localStorage.removeItem('user')
-    mobileMenuOpen.value = false
-    router.replace('/')
-  }
+  await authStore.logout()
+  router.push('/login')
 }
 </script>

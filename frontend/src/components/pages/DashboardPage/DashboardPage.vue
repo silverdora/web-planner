@@ -16,6 +16,7 @@
         :total-pages="totalPages"
         :total="total"
         :stats="stats"
+        :upcoming="upcoming"
         @update:search="search = $event"
         @update:status="statusFilter = $event"
         @update:priority="priorityFilter = $event"
@@ -174,7 +175,7 @@ const loadCategories = async () => {
 }
 
 const loadInitialData = async () => {
-  await Promise.all([loadTasks(), loadStats(), loadCategories()])
+  await Promise.all([loadTasks(), loadStats(), loadCategories(), loadUpcoming()])
 }
 
 const applyRouteSuccessMessage = async () => {
@@ -201,7 +202,7 @@ const handleDeleteTask = async (task) => {
 
   try {
     await axios.delete(`/tasks/${task.id}`)
-    await Promise.all([loadTasks(), loadStats()])
+    await Promise.all([loadTasks(), loadStats(), loadUpcoming()])
     successMessage.value = 'Task deleted successfully.'
   } catch (err) {
     console.error('Delete task error:', err)
@@ -221,7 +222,7 @@ const handleSaveEdit = async ({ id, payload, onSuccess, onError }) => {
 
   try {
     await axios.put(`/tasks/${id}`, payload)
-    await Promise.all([loadTasks(), loadStats()])
+    await Promise.all([loadTasks(), loadStats(), loadUpcoming()])
     successMessage.value = 'Task updated successfully.'
     if (onSuccess) onSuccess()
   } catch (err) {
@@ -249,7 +250,7 @@ const handleChangeStatus = async ({ id, status, onSuccess, onError }) => {
     })
 
     successMessage.value = `Task status changed to ${formatStatusLabel(status)}.`
-    await Promise.all([loadTasks(), loadStats()])
+    await Promise.all([loadTasks(), loadStats(), loadUpcoming()])
 
     if (onSuccess) onSuccess()
   } catch (err) {
@@ -263,6 +264,30 @@ const handleChangeStatus = async ({ id, status, onSuccess, onError }) => {
     if (onError) onError(message)
   } finally {
     savingTaskId.value = null
+  }
+}
+
+const upcoming = ref({
+  overdue: [],
+  today: [],
+  week: [],
+})
+
+const loadUpcoming = async () => {
+  try {
+    const response = await axios.get('/tasks/upcoming')
+    upcoming.value = response.data?.data ?? response.data ?? {
+      overdue: [],
+      today: [],
+      week: [],
+    }
+  } catch (err) {
+    console.error('Load upcoming deadlines error:', err)
+    upcoming.value = {
+      overdue: [],
+      today: [],
+      week: [],
+    }
   }
 }
 

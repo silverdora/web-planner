@@ -38,6 +38,8 @@
 
     <DashboardStats :stats="stats" />
 
+    <UpcomingDeadlines :upcoming="upcoming" />
+
     <DashboardFilters
         :search="search"
         :status="status"
@@ -99,6 +101,7 @@ import PaginationControls from '@/components/molecules/PaginationControls/Pagina
 import DashboardFilters from '@/components/organisms/DashboardFilters/DashboardFilters.vue'
 import DashboardStats from '@/components/organisms/DashboardStats/DashboardStats.vue'
 import TaskList from '@/components/organisms/TaskList/TaskList.vue'
+import UpcomingDeadlines from '@/components/organisms/UpcomingDeadlines/UpcomingDeadlines.vue'
 
 defineProps({
   tasks: { type: Array, default: () => [] },
@@ -116,6 +119,7 @@ defineProps({
   totalPages: { type: Number, default: 1 },
   total: { type: Number, default: 0 },
   stats: { type: Object, default: () => ({ totalTasks: 0, done: 0, pending: 0, overdue: 0 }) },
+  upcoming: { type: Object, default: () => ({overdue: [], today: [], week: [],}),},
 })
 
 defineEmits([

@@ -67,7 +67,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import axios, { setAuthToken } from '@/utils/axios.js'
+import { useAuthStore } from '@/stores/auth.js'
 
 import AuthLayout from '@/components/templates/AuthLayout/AuthLayout.vue'
 import Heading from '@/components/atoms/Heading/Heading.vue'
@@ -77,6 +77,7 @@ import FormField from '@/components/molecules/FormField/FormField.vue'
 import FeedbackMessage from '@/components/molecules/FeedbackMessage/FeedbackMessage.vue'
 
 const router = useRouter()
+const authStore = useAuthStore()
 
 const email = ref('')
 const password = ref('')
@@ -88,30 +89,20 @@ const handleLogin = async () => {
   error.value = ''
 
   try {
-    const response = await axios.post('/auth/login', {
+    await authStore.login({
       email: email.value,
       password: password.value,
     })
 
-    if (response.data.token) {
-      setAuthToken(response.data.token)
-
-      if (response.data.user) {
-        localStorage.setItem('user', JSON.stringify(response.data.user))
-      }
-
-      router.push('/dashboard')
-    } else {
-      error.value = 'No token received from server'
-    }
+    router.push('/dashboard')
   } catch (err) {
     console.error('Login error:', err)
 
-    if (err.response?.data?.message) {
-      error.value = err.response.data.message
-    } else {
-      error.value = 'Login failed. Please check your credentials.'
-    }
+    error.value =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        err.message ||
+        'Login failed. Please check your credentials.'
   } finally {
     loading.value = false
   }

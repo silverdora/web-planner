@@ -6,6 +6,7 @@ use App\Models\Task;
 
 interface ITaskService
 {
+    public function getUpcomingTasks(int $userId): array;
     public function getByIdAndUserId(int $id, int $userId): ?Task;
 
     /**

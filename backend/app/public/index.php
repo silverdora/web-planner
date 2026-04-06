@@ -44,7 +44,9 @@ $dispatcher = simpleDispatcher(function (RouteCollector $r) {
     // Tasks routes
     $r->addRoute('GET', '/tasks/dashboard', ['App\Controllers\TaskController', 'dashboard']);
     $r->addRoute('GET', '/tasks/dashboard-stats', ['App\Controllers\TaskController', 'dashboardStats']);
+    $r->addRoute('GET', '/tasks/upcoming', ['App\Controllers\TaskController', 'upcoming']);
     $r->addRoute('GET', '/tasks/{id}', ['App\Controllers\TaskController', 'get']);
+
     $r->addRoute('POST', '/tasks', ['App\Controllers\TaskController', 'create']);
     $r->addRoute('PUT', '/tasks/change-status', ['App\Controllers\TaskController', 'changeTaskStatus']);
     $r->addRoute('PUT', '/tasks/{id}', ['App\Controllers\TaskController', 'update']);

@@ -6,6 +6,8 @@ use App\Models\Task;
 
 interface ITaskRepository
 {
+    public function getUpcomingTasks(int $userId): array;
+
     /**
      * @return Task[]
      */

@@ -7,6 +7,61 @@ use App\Models\Task;
 
 class TaskRepository extends Repository implements ITaskRepository
 {
+
+    public function getUpcomingTasks(int $userId): array
+    {
+        $sql = '
+        SELECT id, user_id, title, description, category_id, priority, status, due_date
+        FROM tasks
+        WHERE user_id = :user_id
+          AND due_date IS NOT NULL
+          AND due_date <> ""
+          AND status NOT IN ("done", "completed")
+        ORDER BY due_date ASC
+    ';
+
+        $stmt = $this->getConnection()->prepare($sql);
+        $stmt->bindValue(':user_id', $userId, \PDO::PARAM_INT);
+        $stmt->execute();
+
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $now = new \DateTime();
+        $todayStart = (clone $now)->setTime(0, 0, 0);
+        $todayEnd = (clone $now)->setTime(23, 59, 59);
+        $weekEnd = (clone $todayEnd)->modify('+7 days');
+
+        $result = [
+            'overdue' => [],
+            'today' => [],
+            'week' => [],
+        ];
+
+        foreach ($rows as $row) {
+            try {
+                $task = new Task($row);
+                $dueDate = new \DateTime($task->dueDate);
+
+                if ($dueDate < $todayStart) {
+                    $result['overdue'][] = $task;
+                    continue;
+                }
+
+                if ($dueDate >= $todayStart && $dueDate <= $todayEnd) {
+                    $result['today'][] = $task;
+                    continue;
+                }
+
+                if ($dueDate > $todayEnd && $dueDate <= $weekEnd) {
+                    $result['week'][] = $task;
+                }
+            } catch (\Exception $e) {
+                // ignore malformed dates
+            }
+        }
+
+        return $result;
+    }
     public function getByIdAndUserId(int $id, int $userId): ?Task
     {
         $sql = 'SELECT id, user_id, title, description, category_id, priority, status, due_date

@@ -17,6 +17,22 @@ class TaskController extends Controller
         $this->taskService = new TaskService();
     }
 
+    public function upcoming()
+    {
+        try {
+            $user = $this->requireAuth();
+            if (!$user) {
+                return;
+            }
+
+            $result = $this->taskService->getUpcomingTasks((int)$user->id);
+
+            return $this->sendSuccessResponse($result);
+        } catch (\Exception $e) {
+            return $this->sendErrorResponse('Internal server error', 500);
+        }
+    }
+
     public function dashboard()
     {
         try {
