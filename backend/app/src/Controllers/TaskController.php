@@ -20,10 +20,9 @@ class TaskController extends Controller
     public function dashboard()
     {
         try {
-            $user = $this->getAuthenticatedUser();
-
+            $user = $this->requireAuth();
             if (!$user) {
-                return $this->sendErrorResponse('Unauthorized', 401);
+                return;
             }
 
             $tasks = $this->taskService->getByUserId($user->id);
@@ -34,39 +33,17 @@ class TaskController extends Controller
         }
     }
 
-//    public function getAll()
-//    {
-//        try {
-//            $tasks = $this->taskService->getAll();
-//            return $this->sendSuccessResponse($tasks);
-//        } catch (\Exception $e) {
-//            return $this->sendErrorResponse('Internal server error', 500);
-//        }
-//    }
-
     public function get($vars = [])
     {
         try {
-            $user = $this->getAuthenticatedUser();
-
+            $user = $this->requireAuth();
             if (!$user) {
-                return $this->sendErrorResponse('Unauthorized', 401);
+                return;
             }
 
-            $id = (int)($vars['id'] ?? 0);
-
-            if ($id <= 0) {
-                return $this->sendErrorResponse('Task ID is required.', 400);
-            }
-
-            $task = $this->taskService->getById($id);
-
+            $task = $this->findOwnedTask((int)($vars['id'] ?? 0), (int)$user->id);
             if (!$task) {
-                return $this->sendErrorResponse('Task not found', 404);
-            }
-
-            if (($task->userId ?? 0) !== (int)$user->id) {
-                return $this->sendErrorResponse('Forbidden', 403);
+                return;
             }
 
             return $this->sendSuccessResponse($task);
@@ -138,6 +115,10 @@ class TaskController extends Controller
     {
         try {
             $data = $this->getPostData();
+            if (!is_array($data)) {
+                return $this->sendErrorResponse('Invalid request body', 400);
+            }
+
             $status = (string)($data['status'] ?? '');
             $taskId = (int)($data['taskId'] ?? $data['task_id'] ?? 0);
 
@@ -151,13 +132,14 @@ class TaskController extends Controller
                 return;
             }
 
-            $task->status = $status;
+
             $allowedStatuses = array_column(Status::cases(), 'value');
 
             if (!in_array($status, $allowedStatuses, true)) {
                 return $this->sendErrorResponse('Invalid status', 400);
             }
 
+            $task->status = $status;
             $this->taskService->update($task);
 
             return $this->sendSuccessResponse($task);

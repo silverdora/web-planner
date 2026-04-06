@@ -18,10 +18,9 @@ class CategoryController extends Controller
     public function getAll()
     {
         try {
-            $user = $this->getAuthenticatedUser();
-
+            $user = $this->requireAuth();
             if (!$user) {
-                return $this->sendErrorResponse('Unauthorized', 401);
+                return;
             }
 
             $categories = $this->categoryService->getByUserId($user->id);
@@ -34,13 +33,15 @@ class CategoryController extends Controller
     public function get($vars = [])
     {
         try {
-            $user = $this->getAuthenticatedUser();
-
+            $user = $this->requireAuth();
             if (!$user) {
-                return $this->sendErrorResponse('Unauthorized', 401);
+                return;
             }
 
             $id = (int)($vars['id'] ?? 0);
+            if ($id <= 0) {
+                return $this->sendErrorResponse('Category ID is required.', 400);
+            }
             $category = $this->categoryService->getByIdAndUserId($id, $user->id);
 
             if (!$category) {
@@ -56,13 +57,15 @@ class CategoryController extends Controller
     public function create()
     {
         try {
-            $user = $this->getAuthenticatedUser();
-
+            $user = $this->requireAuth();
             if (!$user) {
-                return $this->sendErrorResponse('Unauthorized', 401);
+                return;
             }
 
             $data = $this->getPostData();
+            if (!is_array($data)) {
+                return $this->sendErrorResponse('Invalid request body', 400);
+            }
 
             $created = $this->categoryService->create($user->id, $data);
 
@@ -77,14 +80,16 @@ class CategoryController extends Controller
     public function update($vars = [])
     {
         try {
-            $user = $this->getAuthenticatedUser();
-
+            $user = $this->requireAuth();
             if (!$user) {
-                return $this->sendErrorResponse('Unauthorized', 401);
+                return;
             }
 
             $id = (int)($vars['id'] ?? 0);
             $data = $this->getPostData();
+            if (!is_array($data)) {
+                return $this->sendErrorResponse('Invalid request body', 400);
+            }
 
             $category = $this->categoryService->update($id, $user->id, $data);
 
@@ -103,10 +108,9 @@ class CategoryController extends Controller
     public function delete($vars = [])
     {
         try {
-            $user = $this->getAuthenticatedUser();
-
+            $user = $this->requireAuth();
             if (!$user) {
-                return $this->sendErrorResponse('Unauthorized', 401);
+                return;
             }
 
             $id = (int)($vars['id'] ?? 0);
