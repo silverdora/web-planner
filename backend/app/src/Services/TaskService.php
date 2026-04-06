@@ -17,14 +17,101 @@ class TaskService implements ITaskService
         $this->repository = new TaskRepository();
     }
 
+    public function getByIdAndUserId(int $id, int $userId): ?Task
+    {
+        return $this->repository->getByIdAndUserId($id, $userId);
+    }
+
+    public function getDashboardStats(int $userId, array $filters = []): array
+    {
+        $status = trim((string)($filters['status'] ?? ''));
+        if ($status !== '') {
+            $status = $this->normalizeStatus($status, false);
+        }
+
+        $priority = trim((string)($filters['priority'] ?? ''));
+        if ($priority !== '') {
+            $priority = $this->normalizePriority($priority);
+        }
+
+        $categoryIdRaw = $filters['category_id'] ?? '';
+        $categoryId = ($categoryIdRaw !== '' && $categoryIdRaw !== null)
+            ? (int)$categoryIdRaw
+            : null;
+
+        $normalizedFilters = [
+            'search' => trim((string)($filters['search'] ?? '')),
+            'status' => $status,
+            'priority' => $priority,
+            'category_id' => $categoryId,
+        ];
+
+        return $this->repository->getDashboardStats($userId, $normalizedFilters);
+    }
+
+
     public function getByUserId(int $userId): array
     {
         return $this->repository->getByUserId($userId);
     }
 
-    public function getById(int $id): ?Task
+    public function getDashboardTasks(int $userId, array $filters): array
     {
-        return $this->repository->getById($id);
+        $page = max(1, (int)($filters['page'] ?? 1));
+        $limit = max(1, min((int)($filters['limit'] ?? 10), 100));
+
+        $sort = trim((string)($filters['sort'] ?? ''));
+        $allowedSorts = [
+            '',
+            'due_asc',
+            'due_desc',
+            'title_asc',
+            'title_desc',
+            'category_asc',
+            'category_desc',
+        ];
+
+        if (!in_array($sort, $allowedSorts, true)) {
+            throw new \InvalidArgumentException('Invalid sort value.');
+        }
+
+        $status = trim((string)($filters['status'] ?? ''));
+        if ($status !== '') {
+            $status = $this->normalizeStatus($status, false);
+        }
+
+        $priority = trim((string)($filters['priority'] ?? ''));
+        if ($priority !== '') {
+            $priority = $this->normalizePriority($priority);
+        }
+
+        $categoryIdRaw = $filters['category_id'] ?? '';
+        $categoryId = ($categoryIdRaw !== '' && $categoryIdRaw !== null)
+            ? (int)$categoryIdRaw
+            : null;
+
+        $normalizedFilters = [
+            'search' => trim((string)($filters['search'] ?? '')),
+            'status' => $status,
+            'priority' => $priority,
+            'category_id' => $categoryId,
+            'sort' => $sort,
+            'page' => $page,
+            'limit' => $limit,
+        ];
+
+        $items = $this->repository->getDashboardTasks($userId, $normalizedFilters);
+        $total = $this->repository->countDashboardTasks($userId, $normalizedFilters);
+
+        return [
+            'data' => $items,
+            'pagination' => [
+                'page' => $page,
+                'limit' => $limit,
+                'total' => $total,
+                'totalPages' => (int)ceil($total / $limit),
+            ],
+        ];
     }
 
     public function create(Task $task): Task
@@ -144,19 +231,9 @@ class TaskService implements ITaskService
             throw new \InvalidArgumentException('Title is required.');
         }
 
-        if (mb_strlen($task->title) > 255) {
-            throw new \InvalidArgumentException('Title must not exceed 255 characters.');
-        }
-
         $task->description = trim($task->description);
-
-        if (mb_strlen($task->description) > 2000) {
-            throw new \InvalidArgumentException('Description must not exceed 2000 characters.');
-        }
-
         $task->status = $this->normalizeStatus($task->status, $isCreate);
         $task->priority = $this->normalizePriority($task->priority);
-
         $task->dueDate = $this->normalizeDueDate($task->dueDate);
         $task->categoryId = $this->normalizeCategoryId($task->categoryId);
     }

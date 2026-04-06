@@ -3,10 +3,10 @@
 namespace App\Controllers;
 
 use App\Enums\Status;
+use App\Framework\Controller;
 use App\Models\Task;
 use App\Services\ITaskService;
 use App\Services\TaskService;
-use App\Framework\Controller;
 
 class TaskController extends Controller
 {
@@ -25,11 +25,48 @@ class TaskController extends Controller
                 return;
             }
 
-            $tasks = $this->taskService->getByUserId($user->id);
+            $filters = [
+                'search' => $_GET['search'] ?? '',
+                'status' => $_GET['status'] ?? '',
+                'priority' => $_GET['priority'] ?? '',
+                'category_id' => $_GET['category_id'] ?? '',
+                'sort' => $_GET['sort'] ?? '',
+                'page' => $_GET['page'] ?? 1,
+                'limit' => $_GET['limit'] ?? 10,
+            ];
 
-            return $this->sendSuccessResponse($tasks);
+            $result = $this->taskService->getDashboardTasks((int)$user->id, $filters);
+
+            return $this->sendSuccessResponse($result);
+        } catch (\InvalidArgumentException $e) {
+            return $this->sendErrorResponse($e->getMessage(), 400);
         } catch (\Exception $e) {
-            return $this->sendErrorResponse($e->getMessage(), 500);
+            return $this->sendErrorResponse('Internal server error', 500);
+        }
+    }
+
+    public function dashboardStats()
+    {
+        try {
+            $user = $this->requireAuth();
+            if (!$user) {
+                return;
+            }
+
+            $filters = [
+                'search' => $_GET['search'] ?? '',
+                'status' => $_GET['status'] ?? '',
+                'priority' => $_GET['priority'] ?? '',
+                'category_id' => $_GET['category_id'] ?? '',
+            ];
+
+            $stats = $this->taskService->getDashboardStats((int)$user->id, $filters);
+
+            return $this->sendSuccessResponse($stats);
+        } catch (\InvalidArgumentException $e) {
+            return $this->sendErrorResponse($e->getMessage(), 400);
+        } catch (\Exception $e) {
+            return $this->sendErrorResponse('Internal server error', 500);
         }
     }
 
@@ -139,7 +176,6 @@ class TaskController extends Controller
                 return;
             }
 
-
             $allowedStatuses = array_column(Status::cases(), 'value');
 
             if (!in_array($status, $allowedStatuses, true)) {
@@ -178,22 +214,17 @@ class TaskController extends Controller
         }
     }
 
-    private function findOwnedTask(int $id, int $userId)
+    private function findOwnedTask(int $taskId, int $userId): ?Task
     {
-        if ($id <= 0) {
-            $this->sendErrorResponse('Task ID is required.', 400);
+        if ($taskId <= 0) {
+            $this->sendErrorResponse('Invalid task ID', 400);
             return null;
         }
 
-        $task = $this->taskService->getById($id);
+        $task = $this->taskService->getByIdAndUserId($taskId, $userId);
 
         if (!$task) {
             $this->sendErrorResponse('Task not found', 404);
-            return null;
-        }
-
-        if ((int)($task->userId ?? 0) !== $userId) {
-            $this->sendErrorResponse('Forbidden', 403);
             return null;
         }
 

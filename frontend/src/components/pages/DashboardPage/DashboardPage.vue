@@ -1,7 +1,7 @@
 <template>
   <AppLayout>
     <DashboardOverview
-        :tasks="filteredTasks"
+        :tasks="tasks"
         :loading="loading"
         :error="error"
         :success-message="successMessage"
@@ -12,11 +12,16 @@
         :sort="sortBy"
         :categories="categories"
         :saving-task-id="savingTaskId"
+        :current-page="currentPage"
+        :total-pages="totalPages"
+        :total="total"
+        :stats="stats"
         @update:search="search = $event"
         @update:status="statusFilter = $event"
         @update:priority="priorityFilter = $event"
         @update:category="categoryFilter = $event"
         @update:sort="sortBy = $event"
+        @update:page="currentPage = $event"
         @dismiss-success-message="successMessage = ''"
         @delete="handleDeleteTask"
         @save-edit="handleSaveEdit"
@@ -26,10 +31,9 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from '@/utils/axios.js'
-
 import AppLayout from '@/components/templates/AppLayout/AppLayout.vue'
 import DashboardOverview from '@/components/organisms/DashboardOverview/DashboardOverview.vue'
 
@@ -40,6 +44,18 @@ const error = ref('')
 const successMessage = ref('')
 const savingTaskId = ref(null)
 
+const currentPage = ref(1)
+const pageSize = ref(10)
+const total = ref(0)
+const totalPages = ref(1)
+
+const stats = ref({
+  totalTasks: 0,
+  done: 0,
+  pending: 0,
+  overdue: 0,
+})
+
 const route = useRoute()
 const router = useRouter()
 
@@ -48,38 +64,6 @@ const statusFilter = ref('')
 const priorityFilter = ref('')
 const categoryFilter = ref('')
 const sortBy = ref('')
-
-const normalizeStatus = (value) => {
-  const normalized = String(value ?? '').toLowerCase()
-
-  const map = {
-    '1': 'created',
-    '2': 'in progress',
-    '3': 'done',
-    created: 'created',
-    in_progress: 'in progress',
-    'in progress': 'in progress',
-    completed: 'done',
-    done: 'done',
-  }
-
-  return map[normalized] || normalized
-}
-
-const normalizePriority = (value) => {
-  const normalized = String(value ?? '').toLowerCase()
-
-  const map = {
-    '1': 'low',
-    '2': 'medium',
-    '3': 'high',
-    low: 'low',
-    medium: 'medium',
-    high: 'high',
-  }
-
-  return map[normalized] || normalized
-}
 
 const formatStatusLabel = (value) => {
   const normalized = String(value ?? '').trim().toLowerCase()
@@ -96,135 +80,104 @@ const formatStatusLabel = (value) => {
   return map[normalized] || String(value ?? '').trim()
 }
 
-const getTaskCategoryId = (task) => {
-  return String(task.category_id ?? task.categoryId ?? '')
-}
+const unwrapResponseData = (response) => response?.data?.data ?? response?.data ?? response
 
-const getTaskCategoryName = (task) => {
-  const directName = String(task.category_name ?? task.categoryName ?? task.category?.name ?? '').trim()
-  if (directName) return directName
+const getTaskParams = () => ({
+  search: search.value || undefined,
+  status: statusFilter.value || undefined,
+  priority: priorityFilter.value || undefined,
+  category_id: categoryFilter.value || undefined,
+  sort: sortBy.value || undefined,
+  page: currentPage.value,
+  limit: pageSize.value,
+})
 
-  const categoryId = getTaskCategoryId(task)
-  if (!categoryId) return ''
-
-  const matchedCategory = categories.value.find(
-      (category) => String(category.id) === categoryId
-  )
-
-  return String(matchedCategory?.name ?? '').trim()
-}
-
-const filteredTasks = computed(() => {
-  let result = [...tasks.value]
-
-  if (search.value.trim()) {
-    const query = search.value.trim().toLowerCase()
-    result = result.filter((task) =>
-        String(task.title ?? '').toLowerCase().includes(query)
-    )
-  }
-
-  if (statusFilter.value) {
-    result = result.filter((task) =>
-        normalizeStatus(task.status || task.status) === statusFilter.value
-    )
-  }
-
-  if (priorityFilter.value) {
-    result = result.filter((task) =>
-        normalizePriority(task.priority || task.priority) === priorityFilter.value
-    )
-  }
-
-  if (categoryFilter.value) {
-    result = result.filter((task) =>
-        getTaskCategoryId(task) === String(categoryFilter.value)
-    )
-  }
-
-  if (sortBy.value === 'due_asc') {
-    result.sort((a, b) => {
-      const aDate = a.dueDate || a.due_date
-      const bDate = b.dueDate || b.due_date
-      return new Date(aDate || 0) - new Date(bDate || 0)
-    })
-  }
-
-  if (sortBy.value === 'due_desc') {
-    result.sort((a, b) => {
-      const aDate = a.dueDate || a.due_date
-      const bDate = b.dueDate || b.due_date
-      return new Date(bDate || 0) - new Date(aDate || 0)
-    })
-  }
-
-  if (sortBy.value === 'category_asc') {
-    result.sort((a, b) => {
-      const categoryCompare = getTaskCategoryName(a).localeCompare(getTaskCategoryName(b))
-      if (categoryCompare !== 0) return categoryCompare
-      return String(a.title ?? '').localeCompare(String(b.title ?? ''))
-    })
-  }
-
-  if (sortBy.value === 'category_desc') {
-    result.sort((a, b) => {
-      const categoryCompare = getTaskCategoryName(b).localeCompare(getTaskCategoryName(a))
-      if (categoryCompare !== 0) return categoryCompare
-      return String(a.title ?? '').localeCompare(String(b.title ?? ''))
-    })
-  }
-
-  if (sortBy.value === 'title_asc') {
-    result.sort((a, b) => String(a.title).localeCompare(String(b.title)))
-  }
-
-  if (sortBy.value === 'title_desc') {
-    result.sort((a, b) => String(b.title).localeCompare(String(a.title)))
-  }
-
-  return result
+const getStatsParams = () => ({
+  search: search.value || undefined,
+  status: statusFilter.value || undefined,
+  priority: priorityFilter.value || undefined,
+  category_id: categoryFilter.value || undefined,
 })
 
 const loadTasks = async () => {
-  const response = await axios.get('/tasks/dashboard')
-  const payload = response.data.data ?? response.data
-
-  if (!Array.isArray(payload)) {
-    throw new Error('Unexpected tasks response')
-  }
-
-  tasks.value = payload
-}
-
-const loadCategories = async () => {
-  const response = await axios.get('/categories')
-  const payload = response.data.data ?? response.data
-
-  if (!Array.isArray(payload)) {
-    throw new Error('Unexpected categories response')
-  }
-
-  categories.value = payload
-}
-
-const loadDashboardData = async () => {
   loading.value = true
   error.value = ''
 
   try {
-    await Promise.all([loadTasks(), loadCategories()])
+    const response = await axios.get('/tasks/dashboard', {
+      params: getTaskParams(),
+    })
+
+    const payload = response.data?.data ?? []
+    const pagination = response.data?.pagination ?? {}
+
+    tasks.value = Array.isArray(payload) ? payload : []
+    total.value = pagination.total ?? 0
+    totalPages.value = Math.max(1, pagination.totalPages ?? 1)
+
+    // If current page no longer exists (for example after deleting the last task
+    // on the last page), jump to the last valid page and let the page watcher reload.
+    if (currentPage.value > totalPages.value) {
+      currentPage.value = totalPages.value
+      return
+    }
   } catch (err) {
-    console.error('Dashboard load error:', err)
+    console.error('Load tasks error:', err)
     error.value =
         err.response?.data?.error ||
         err.response?.data?.message ||
         err.message ||
-        'Failed to load dashboard data'
+        'Failed to load tasks'
+
     tasks.value = []
-    categories.value = []
+    total.value = 0
+    totalPages.value = 1
   } finally {
     loading.value = false
   }
+}
+
+const loadStats = async () => {
+  try {
+    const response = await axios.get('/tasks/dashboard-stats', {
+      params: getStatsParams(),
+    })
+
+    stats.value = response.data?.data ?? response.data ?? {
+      totalTasks: 0,
+      done: 0,
+      pending: 0,
+      overdue: 0,
+    }
+  } catch (err) {
+    console.error('Load stats error:', err)
+    stats.value = {
+      totalTasks: 0,
+      done: 0,
+      pending: 0,
+      overdue: 0,
+    }
+  }
+}
+
+const loadCategories = async () => {
+  try {
+    const response = await axios.get('/categories')
+    const payload = unwrapResponseData(response)
+
+    categories.value = Array.isArray(payload) ? payload : []
+  } catch (err) {
+    console.error('Load categories error:', err)
+    error.value =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        err.message ||
+        'Failed to load categories'
+  }
+}
+
+const loadInitialData = async () => {
+  await Promise.all([loadTasks(), loadStats(), loadCategories()])
 }
 
 const applyRouteSuccessMessage = async () => {
@@ -246,15 +199,22 @@ const handleDeleteTask = async (task) => {
   const confirmed = window.confirm(`Delete task "${task.title}"?`)
   if (!confirmed) return
 
+  error.value = ''
+  savingTaskId.value = task.id
+
   try {
     await axios.delete(`/tasks/${task.id}`)
-    tasks.value = tasks.value.filter((item) => item.id !== task.id)
+    await Promise.all([loadTasks(), loadStats()])
+    successMessage.value = 'Task deleted successfully.'
   } catch (err) {
     console.error('Delete task error:', err)
     error.value =
         err.response?.data?.error ||
         err.response?.data?.message ||
-        err.message || 'Failed to delete task'
+        err.message ||
+        'Failed to delete task'
+  } finally {
+    savingTaskId.value = null
   }
 }
 
@@ -263,23 +223,18 @@ const handleSaveEdit = async ({ id, payload, onSuccess, onError }) => {
   error.value = ''
 
   try {
-    const response = await axios.put(`/tasks/${id}`, payload)
-    const updatedTask = response.data.data ?? response.data
-
-    const index = tasks.value.findIndex((task) => task.id === id)
-
-    if (index !== -1) {
-      tasks.value[index] = {
-        ...tasks.value[index],
-        ...payload,
-        ...(typeof updatedTask === 'object' && updatedTask !== null ? updatedTask : {}),
-      }
-    }
-
+    await axios.put(`/tasks/${id}`, payload)
+    await Promise.all([loadTasks(), loadStats()])
+    successMessage.value = 'Task updated successfully.'
     if (onSuccess) onSuccess()
   } catch (err) {
     console.error('Update task error:', err)
-    const message = err.response?.data?.message || 'Failed to update task'
+    const message =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        err.message ||
+        'Failed to update task'
+
     if (onError) onError(message)
   } finally {
     savingTaskId.value = null
@@ -291,23 +246,13 @@ const handleChangeStatus = async ({ id, status, onSuccess, onError }) => {
   error.value = ''
 
   try {
-    const response = await axios.put('/tasks/change-status', {
+    await axios.put('/tasks/change-status', {
       taskId: id,
       status,
     })
 
-    const updatedTask = response.data.data ?? response.data
-    const index = tasks.value.findIndex((task) => task.id === id)
-
-    if (index !== -1) {
-      tasks.value[index] = {
-        ...tasks.value[index],
-        status,
-        ...(typeof updatedTask === 'object' && updatedTask !== null ? updatedTask : {}),
-      }
-    }
-
     successMessage.value = `Task status changed to ${formatStatusLabel(status)}.`
+    await Promise.all([loadTasks(), loadStats()])
 
     if (onSuccess) onSuccess()
   } catch (err) {
@@ -324,8 +269,25 @@ const handleChangeStatus = async ({ id, status, onSuccess, onError }) => {
   }
 }
 
+watch([search, statusFilter, priorityFilter, categoryFilter, sortBy], async () => {
+  error.value = ''
+  await loadStats()
+
+  if (currentPage.value !== 1) {
+    currentPage.value = 1
+    return
+  }
+
+  await loadTasks()
+})
+
+watch(currentPage, async () => {
+  await loadTasks()
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+})
+
 onMounted(async () => {
   await applyRouteSuccessMessage()
-  await loadDashboardData()
+  await loadInitialData()
 })
 </script>

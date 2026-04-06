@@ -36,7 +36,7 @@
       </div>
     </div>
 
-    <DashboardStats :tasks="tasks" />
+    <DashboardStats :stats="stats" />
 
     <DashboardFilters
         :search="search"
@@ -70,15 +70,24 @@
         message="No tasks found."
     />
 
-    <TaskList
-        v-else
-        :tasks="tasks"
-        :categories="categories"
-        :saving-task-id="savingTaskId"
-        @delete="$emit('delete', $event)"
-        @save-edit="$emit('save-edit', $event)"
-        @change-status="$emit('change-status', $event)"
-    />
+    <template v-else>
+      <TaskList
+          :tasks="tasks"
+          :categories="categories"
+          :saving-task-id="savingTaskId"
+          @delete="$emit('delete', $event)"
+          @save-edit="$emit('save-edit', $event)"
+          @change-status="$emit('change-status', $event)"
+      />
+
+      <PaginationControls
+          :current-page="currentPage"
+          :total-pages="totalPages"
+          :total="total"
+          :disabled="loading"
+          @update:page="$emit('update:page', $event)"
+      />
+    </template>
   </section>
 </template>
 
@@ -86,6 +95,7 @@
 import Heading from '@/components/atoms/Heading/Heading.vue'
 import Text from '@/components/atoms/Text/Text.vue'
 import FeedbackMessage from '@/components/molecules/FeedbackMessage/FeedbackMessage.vue'
+import PaginationControls from '@/components/molecules/PaginationControls/PaginationControls.vue'
 import DashboardFilters from '@/components/organisms/DashboardFilters/DashboardFilters.vue'
 import DashboardStats from '@/components/organisms/DashboardStats/DashboardStats.vue'
 import TaskList from '@/components/organisms/TaskList/TaskList.vue'
@@ -102,6 +112,10 @@ defineProps({
   sort: { type: String, default: '' },
   categories: { type: Array, default: () => [] },
   savingTaskId: { type: [Number, String, null], default: null },
+  currentPage: { type: Number, default: 1 },
+  totalPages: { type: Number, default: 1 },
+  total: { type: Number, default: 0 },
+  stats: { type: Object, default: () => ({ totalTasks: 0, done: 0, pending: 0, overdue: 0 }) },
 })
 
 defineEmits([
@@ -110,9 +124,12 @@ defineEmits([
   'update:priority',
   'update:category',
   'update:sort',
+  'update:page',
   'dismiss-success-message',
   'delete',
   'save-edit',
   'change-status',
 ])
+
+
 </script>
