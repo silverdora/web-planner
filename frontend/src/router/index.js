@@ -7,6 +7,7 @@ import RegistrationPage from '../components/pages/RegistrationPage/RegistrationP
 import DashboardPage from '../components/pages/DashboardPage/DashboardPage.vue'
 import CreateTaskPage from '../components/pages/CreateTaskPage/CreateTaskPage.vue'
 import CategoriesPage from '../components/pages/CategoriesPage/CategoriesPage.vue'
+import CompletedTasksPage from '../components/pages/CompletedTasksPage/CompletedTasksPage.vue'
 
 const routes = [
     {
@@ -57,6 +58,12 @@ const routes = [
         component: {
             template: '<div class="p-8 text-2xl font-bold">Edit task page</div>',
         },
+    },
+    {
+        path: '/tasks/completed',
+        name: 'tasks-completed',
+        component: CompletedTasksPage,
+        meta: { requiresAuth: true },
     },
 ]
 

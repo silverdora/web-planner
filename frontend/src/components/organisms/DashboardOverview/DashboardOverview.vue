@@ -8,12 +8,21 @@
         </Text>
       </div>
 
-      <router-link
-          to="/tasks/create"
-          class="inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700"
-      >
-        Add new task
-      </router-link>
+      <div class="flex flex-col gap-2 sm:flex-row">
+        <router-link
+            to="/tasks/completed"
+            class="inline-flex items-center justify-center rounded-xl border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-50"
+        >
+          View completed
+        </router-link>
+
+        <router-link
+            to="/tasks/create"
+            class="inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+        >
+          Add new task
+        </router-link>
+      </div>
     </div>
 
     <div

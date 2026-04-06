@@ -93,6 +93,7 @@ const authStore = useAuthStore()
 
 const navigationLinks = [
   { name: 'Dashboard', href: '/dashboard' },
+  { name: 'Completed', href: '/tasks/completed' },
   { name: 'Categories', href: '/categories' },
 ]
 

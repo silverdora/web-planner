@@ -1,7 +1,7 @@
 <template>
   <AppLayout>
     <DashboardOverview
-        :tasks="tasks"
+        :tasks="visibleDashboardTasks"
         :loading="loading"
         :error="error"
         :success-message="successMessage"
@@ -34,7 +34,7 @@
 </template>
 
 <script setup>
-import { onMounted, ref, watch, nextTick } from 'vue'
+import {onMounted, ref, watch, nextTick, computed} from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from '@/utils/axios.js'
 import AppLayout from '@/components/templates/AppLayout/AppLayout.vue'
@@ -332,6 +332,28 @@ const scrollToTask = async (taskId) => {
     element.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
 }
+
+const normalizeStatus = (value) => {
+  const normalized = String(value ?? '').trim().toLowerCase()
+
+  const map = {
+    created: 'created',
+    'in progress': 'in progress',
+    in_progress: 'in progress',
+    done: 'done',
+    completed: 'done',
+    cancelled: 'cancelled',
+    '1': 'created',
+    '2': 'in progress',
+    '3': 'done',
+  }
+
+  return map[normalized] || normalized
+}
+
+const visibleDashboardTasks = computed(() =>
+    tasks.value.filter((task) => normalizeStatus(task.status) !== 'done')
+)
 
 watch([search, statusFilter, priorityFilter, categoryFilter, sortBy], async () => {
   error.value = ''
