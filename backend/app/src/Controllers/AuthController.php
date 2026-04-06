@@ -1,8 +1,6 @@
 <?php
 
 namespace App\Controllers;
-
-use App\Framework\Authentication;
 use App\Models\User;
 use App\Models\UserDTO;
 use App\Exceptions\UserAlreadyExistsException;
@@ -113,10 +111,8 @@ class AuthController extends Controller
         }
     }
 
-    public function logout(): void
+    public function logout()
     {
-        Authentication::logout();
-        header('Location: /login');
-        exit;
+        return $this->sendSuccessResponse(['message' => 'Logged out']);
     }
 }

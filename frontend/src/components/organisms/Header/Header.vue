@@ -87,7 +87,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { setAuthToken } from '@/utils/axios.js'
+import axios, { setAuthToken } from '@/utils/axios.js'
 
 defineProps({
   navigationLinks: {
@@ -102,10 +102,16 @@ defineProps({
 const mobileMenuOpen = ref(false)
 const router = useRouter()
 
-const handleLogout = () => {
-  setAuthToken(null)
-  localStorage.removeItem('user')
-  mobileMenuOpen.value = false
-  router.replace('/')
+const handleLogout = async () => {
+  try {
+    await axios.post('/auth/logout')
+  } catch (error) {
+    console.error('Logout error:', error)
+  } finally {
+    setAuthToken(null)
+    localStorage.removeItem('user')
+    mobileMenuOpen.value = false
+    router.replace('/')
+  }
 }
 </script>

@@ -21,14 +21,6 @@ class TaskService implements ITaskService
         return $this->repository->getByUserId($userId);
     }
 
-    /**
-     * @return Task[]
-     */
-    public function getAll(): array
-    {
-        return $this->repository->getAll();
-    }
-
     public function getById(int $id): ?Task
     {
         return $this->repository->getById($id);

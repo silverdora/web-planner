@@ -23,22 +23,18 @@ class Repository
     private function connect(): void
     {
         try {
-            //create a new conection string
             $connectionString = 'mysql:host=' . Config::DB_SERVER_NAME . ';dbname=' . Config::DB_NAME . ';charset=utf8mb4';
 
-            //create new PDO connection
-            self::$connection = new \PDO(
+            self::$connection = new PDO(
                 $connectionString,
                 Config::DB_USERNAME,
                 Config::DB_PASSWORD
             );
 
-            
-        } catch (\PDOException $e){
-            //tell PDO to throw exception or error
-            self::$connection->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-            error_log($e->getMessage()); //log the real error
-            die("DB connection failed"); //display message
+            self::$connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        } catch (\PDOException $e) {
+            error_log($e->getMessage());
+            die('DB connection failed');
         }
     }
 }

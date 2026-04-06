@@ -6,11 +6,6 @@ use App\Models\Task;
 
 interface ITaskService
 {
-
-    /**
-     * @return Task[]
-     */
-    public function getAll(): array;
     public function getById(int $id): ?Task;
 
     /**

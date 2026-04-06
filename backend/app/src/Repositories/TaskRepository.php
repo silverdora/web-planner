@@ -28,16 +28,6 @@ class TaskRepository extends Repository implements ITaskRepository
         return $tasks;
     }
 
-    /**
-     * @return Task[]
-     */
-    public function getAll(): array
-    {
-        $sql = 'SELECT id, user_id, title, description, category_id, priority, status, due_date FROM tasks';
-        $result = $this->getConnection()->query($sql);
-
-        return $result->fetchAll(\PDO::FETCH_CLASS, '\App\Models\Task');
-    }
 
     public function getById(int $id): ?Task
     {

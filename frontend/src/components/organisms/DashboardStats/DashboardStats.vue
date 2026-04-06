@@ -1,7 +1,7 @@
 <template>
   <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
     <StatCard title="Total Tasks" :value="tasks.length" />
-    <StatCard title="Completed" :value="completedCount" />
+    <StatCard title="Done" :value="doneCount" />
     <StatCard title="Pending" :value="pendingCount" />
     <StatCard title="Overdue" :value="overdueCount" />
   </div>
@@ -20,16 +20,16 @@ const props = defineProps({
 
 const normalizeStatus = (status) => String(status).toLowerCase()
 
-const completedCount = computed(() =>
+const doneCount = computed(() =>
     props.tasks.filter((task) => {
-      const value = normalizeStatus(task.status || task.status)
-      return value === 'completed' || value === '3'
+      const value = normalizeStatus(task.status)
+      return value === 'done' || value === '3'
     }).length
 )
 
 const pendingCount = computed(() =>
     props.tasks.filter((task) => {
-      const value = normalizeStatus(task.status || task.status)
+      const value = normalizeStatus(task.status)
       return value !== 'done' && value !== '3'
     }).length
 )
@@ -39,7 +39,7 @@ const overdueCount = computed(() => {
 
   return props.tasks.filter((task) => {
     const dueDate = task.dueDate || task.due_date
-    const status = normalizeStatus(task.status || task.status)
+    const status = normalizeStatus(task.status)
 
     if (!dueDate) return false
     if (status === 'done' || status === '3') return false

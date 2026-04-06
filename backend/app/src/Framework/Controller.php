@@ -107,4 +107,16 @@ class Controller
             $value
         );
     }
+
+    protected function requireAuth()
+    {
+        $user = $this->getAuthenticatedUser();
+
+        if (!$user) {
+            $this->sendErrorResponse('Unauthorized', 401);
+            return null;
+        }
+
+        return $user;
+    }
 }
