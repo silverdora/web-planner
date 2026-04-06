@@ -18,8 +18,6 @@ class AuthController extends Controller
         parent::__construct();
     }
 
-
-
     public function login()
     {
         try {
@@ -79,20 +77,6 @@ class AuthController extends Controller
 //        catch (\Exception $e) {
 //            return $this->sendErrorResponse('Internal server error', 500);
 //        }
-    }
-    public function currentUser()
-    {
-        try {
-            $user = $this->getAuthenticatedUser();
-
-            if (!$user) {
-                return $this->sendErrorResponse('Invalid or expired token', 401);
-            }
-
-            return $this->sendSuccessResponse($user);
-        } catch (\Exception $e) {
-            return $this->sendErrorResponse('Internal server error', 500);
-        }
     }
 
     public function logout()

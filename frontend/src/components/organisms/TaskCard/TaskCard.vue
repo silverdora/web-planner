@@ -1,5 +1,8 @@
 <template>
-  <article class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-md">
+  <article
+      :id="`task-${task.id}`"
+      class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm transition hover:shadow-md"
+  >
     <template v-if="!isEditing">
       <TaskCardHeader
           :title="taskTitle"

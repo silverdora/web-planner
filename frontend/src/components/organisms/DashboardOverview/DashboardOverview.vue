@@ -38,7 +38,12 @@
 
     <DashboardStats :stats="stats" />
 
-    <UpcomingDeadlines :upcoming="upcoming" />
+    <CategoryStats :items="categoryStats" />
+
+    <UpcomingDeadlines
+        :upcoming="upcoming"
+        @go-to-task="$emit('go-to-task', $event)"
+    />
 
     <DashboardFilters
         :search="search"
@@ -73,7 +78,7 @@
     />
 
     <template v-else>
-      <TaskList
+      <GroupedTaskList
           :tasks="tasks"
           :categories="categories"
           :saving-task-id="savingTaskId"
@@ -100,8 +105,9 @@ import FeedbackMessage from '@/components/molecules/FeedbackMessage/FeedbackMess
 import PaginationControls from '@/components/molecules/PaginationControls/PaginationControls.vue'
 import DashboardFilters from '@/components/organisms/DashboardFilters/DashboardFilters.vue'
 import DashboardStats from '@/components/organisms/DashboardStats/DashboardStats.vue'
-import TaskList from '@/components/organisms/TaskList/TaskList.vue'
 import UpcomingDeadlines from '@/components/organisms/UpcomingDeadlines/UpcomingDeadlines.vue'
+import GroupedTaskList from '@/components/organisms/GroupedTaskList/GroupedTaskList.vue'
+import CategoryStats from '@/components/organisms/CategoryStats/CategoryStats.vue'
 
 defineProps({
   tasks: { type: Array, default: () => [] },
@@ -119,6 +125,7 @@ defineProps({
   totalPages: { type: Number, default: 1 },
   total: { type: Number, default: 0 },
   stats: { type: Object, default: () => ({ totalTasks: 0, done: 0, pending: 0, overdue: 0 }) },
+  categoryStats: {type: Array, default: () => [],},
   upcoming: { type: Object, default: () => ({overdue: [], today: [], week: [],}),},
 })
 
@@ -133,7 +140,6 @@ defineEmits([
   'delete',
   'save-edit',
   'change-status',
+  'go-to-task',
 ])
-
-
 </script>

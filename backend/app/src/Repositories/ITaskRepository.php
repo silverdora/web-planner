@@ -17,6 +17,7 @@ interface ITaskRepository
      * @return Task[]
      */
     public function getDashboardTasks(int $userId, array $filters): array;
+    public function getDashboardCategoryStats(int $userId): array;
 
     public function countDashboardTasks(int $userId, array $filters): int;
 

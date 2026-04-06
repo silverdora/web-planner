@@ -17,6 +17,11 @@ class TaskService implements ITaskService
         $this->repository = new TaskRepository();
     }
 
+    public function getDashboardCategoryStats(int $userId): array
+    {
+        return $this->repository->getDashboardCategoryStats($userId);
+    }
+
     public function getUpcomingTasks(int $userId): array
     {
         return $this->repository->getUpcomingTasks($userId);

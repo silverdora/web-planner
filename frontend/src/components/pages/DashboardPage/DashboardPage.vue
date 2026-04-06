@@ -11,6 +11,7 @@
         :category="categoryFilter"
         :sort="sortBy"
         :categories="categories"
+        :category-stats="categoryStats"
         :saving-task-id="savingTaskId"
         :current-page="currentPage"
         :total-pages="totalPages"
@@ -27,12 +28,13 @@
         @delete="handleDeleteTask"
         @save-edit="handleSaveEdit"
         @change-status="handleChangeStatus"
+        @go-to-task="scrollToTask"
     />
   </AppLayout>
 </template>
 
 <script setup>
-import { onMounted, ref, watch } from 'vue'
+import { onMounted, ref, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import axios from '@/utils/axios.js'
 import AppLayout from '@/components/templates/AppLayout/AppLayout.vue'
@@ -56,6 +58,8 @@ const stats = ref({
   pending: 0,
   overdue: 0,
 })
+
+const categoryStats = ref([])
 
 const route = useRoute()
 const router = useRouter()
@@ -138,6 +142,18 @@ const loadTasks = async () => {
   }
 }
 
+const scrollToFocusedTaskFromRoute = async () => {
+  const focusTaskId = route.query.focusTask
+  if (!focusTaskId) return
+
+  await nextTick()
+
+  const element = document.getElementById(`task-${focusTaskId}`)
+  if (element) {
+    element.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }
+}
+
 const loadStats = async () => {
   try {
     const response = await axios.get('/tasks/dashboard-stats')
@@ -174,8 +190,25 @@ const loadCategories = async () => {
   }
 }
 
+const loadCategoryStats = async () => {
+  try {
+    const response = await axios.get('/tasks/dashboard-category-stats')
+    const payload = response.data?.data ?? response.data ?? []
+    categoryStats.value = Array.isArray(payload) ? payload : []
+  } catch (err) {
+    console.error('Load category stats error:', err)
+    categoryStats.value = []
+  }
+}
+
 const loadInitialData = async () => {
-  await Promise.all([loadTasks(), loadStats(), loadCategories(), loadUpcoming()])
+  await Promise.all([
+    loadTasks(),
+    loadStats(),
+    loadCategoryStats(),
+    loadCategories(),
+    loadUpcoming(),
+  ])
 }
 
 const applyRouteSuccessMessage = async () => {
@@ -202,7 +235,7 @@ const handleDeleteTask = async (task) => {
 
   try {
     await axios.delete(`/tasks/${task.id}`)
-    await Promise.all([loadTasks(), loadStats(), loadUpcoming()])
+    await Promise.all([loadTasks(), loadStats(), loadCategoryStats(), loadUpcoming()])
     successMessage.value = 'Task deleted successfully.'
   } catch (err) {
     console.error('Delete task error:', err)
@@ -222,7 +255,7 @@ const handleSaveEdit = async ({ id, payload, onSuccess, onError }) => {
 
   try {
     await axios.put(`/tasks/${id}`, payload)
-    await Promise.all([loadTasks(), loadStats(), loadUpcoming()])
+    await Promise.all([loadTasks(), loadStats(), loadCategoryStats(), loadUpcoming()])
     successMessage.value = 'Task updated successfully.'
     if (onSuccess) onSuccess()
   } catch (err) {
@@ -250,7 +283,7 @@ const handleChangeStatus = async ({ id, status, onSuccess, onError }) => {
     })
 
     successMessage.value = `Task status changed to ${formatStatusLabel(status)}.`
-    await Promise.all([loadTasks(), loadStats(), loadUpcoming()])
+    await Promise.all([loadTasks(), loadStats(), loadCategoryStats(), loadUpcoming()])
 
     if (onSuccess) onSuccess()
   } catch (err) {
@@ -291,6 +324,15 @@ const loadUpcoming = async () => {
   }
 }
 
+const scrollToTask = async (taskId) => {
+  await nextTick()
+
+  const element = document.getElementById(`task-${taskId}`)
+  if (element) {
+    element.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+}
+
 watch([search, statusFilter, priorityFilter, categoryFilter, sortBy], async () => {
   error.value = ''
   await loadStats()
@@ -311,5 +353,6 @@ watch(currentPage, async () => {
 onMounted(async () => {
   await applyRouteSuccessMessage()
   await loadInitialData()
+  await scrollToFocusedTaskFromRoute()
 })
 </script>

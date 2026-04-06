@@ -8,6 +8,41 @@ use App\Models\Task;
 class TaskRepository extends Repository implements ITaskRepository
 {
 
+    public function getDashboardCategoryStats(int $userId): array
+    {
+        $sql = '
+        SELECT
+            c.id AS category_id,
+            c.name AS category_name,
+            COUNT(t.id) AS total,
+            SUM(CASE WHEN t.status = "done" THEN 1 ELSE 0 END) AS done_count,
+            SUM(CASE WHEN t.status <> "done" THEN 1 ELSE 0 END) AS pending_count
+        FROM tasks t
+        LEFT JOIN categories c ON c.id = t.category_id AND c.user_id = t.user_id
+        WHERE t.user_id = :user_id
+        GROUP BY c.id, c.name
+        ORDER BY
+            CASE WHEN c.name IS NULL THEN 1 ELSE 0 END,
+            c.name ASC
+    ';
+
+        $stmt = $this->getConnection()->prepare($sql);
+        $stmt->bindValue(':user_id', $userId, \PDO::PARAM_INT);
+        $stmt->execute();
+
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        return array_map(function ($row) {
+            return [
+                'categoryId' => $row['category_id'] !== null ? (int)$row['category_id'] : null,
+                'categoryName' => $row['category_name'] ?? 'Uncategorized',
+                'total' => (int)($row['total'] ?? 0),
+                'done' => (int)($row['done_count'] ?? 0),
+                'pending' => (int)($row['pending_count'] ?? 0),
+            ];
+        }, $rows);
+    }
+
     public function getUpcomingTasks(int $userId): array
     {
         $sql = '
@@ -16,7 +51,7 @@ class TaskRepository extends Repository implements ITaskRepository
         WHERE user_id = :user_id
           AND due_date IS NOT NULL
           AND due_date <> ""
-          AND status NOT IN ("done", "completed")
+          AND status NOT IN ("done", "completed", "cancelled")
         ORDER BY due_date ASC
     ';
 
