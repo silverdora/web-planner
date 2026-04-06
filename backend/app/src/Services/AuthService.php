@@ -7,7 +7,6 @@ use App\Exceptions\UserAlreadyExistsException;
 use App\Repositories\IUserRepository;
 use App\Repositories\UserRepository;
 use Firebase\JWT\JWT;
-use Firebase\JWT\Key;
 use App\Config;
 
 class AuthService implements IAuthService
@@ -31,22 +30,6 @@ class AuthService implements IAuthService
         // Verify password against hash
         if (!password_verify($password, $user->password)) {
             return null;
-        }
-
-        return $user;
-    }
-
-    public function login(string $email, string $password): array
-    {
-        $email = strtolower(trim($email));
-
-        $user = $this->userRepository->getByEmail($email);
-        if (!$user) {
-            throw new \InvalidArgumentException('Invalid email or password.');
-        }
-
-        if (!password_verify($password, (string)$user['password'])) {
-            throw new \InvalidArgumentException('Invalid email or password.');
         }
 
         return $user;
@@ -86,42 +69,5 @@ class AuthService implements IAuthService
         ];
 
         return JWT::encode($payload, Config::$secretKey, self::JWT_ALGORITHM);
-    }
-
-    public function validateToken(string $token): bool
-    {
-        try {
-            $decoded = JWT::decode($token, new Key(Config::$secretKey, self::JWT_ALGORITHM));
-
-            // Validate required claims
-            if (!isset($decoded->iss) || !isset($decoded->aud) || !isset($decoded->exp)) {
-                return false;
-            }
-
-            // Validate issuer and audience match domain
-            if ($decoded->iss !== Config::$domain || $decoded->aud !== Config::$domain) {
-                return false;
-            }
-
-            return true;
-        } catch (\Exception $e) {
-            return false; // Invalid token
-        }
-    }
-
-    public function getUserFromToken(string $token): ?User
-    {
-        try {
-            $decoded = JWT::decode($token, new Key(Config::$secretKey, self::JWT_ALGORITHM));
-        } catch (\Exception $e) {
-            return null; // Invalid token
-        }
-
-        // Get user by ID from the decoded token
-        if (isset($decoded->data->id)) {
-            return $this->userRepository->getById($decoded->data->id);
-        }
-
-        return null;
     }
 }

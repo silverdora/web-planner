@@ -76,12 +76,13 @@ class TaskRepository extends Repository implements ITaskRepository
                 priority = :priority,
                 status = :status,
                 due_date = :due_date
-            WHERE id = :id';
+            WHERE id = :id AND user_id = :user_id';
 
     $stmt = $this->getConnection()->prepare($sql);
 
     return $stmt->execute([
         ':id' => $task->id,
+        ':user_id' => $task->userId,
         ':title' => $task->title,
         ':description' => $task->description,
         ':category_id' => $task->categoryId,
@@ -91,11 +92,12 @@ class TaskRepository extends Repository implements ITaskRepository
     ]);
 }
 
-    public function delete(int $id): void
+    public function delete(int $id, int $userId): void
     {
-        $sql = 'DELETE FROM tasks WHERE id = :id';
+        $sql = 'DELETE FROM tasks WHERE id = :id AND user_id = :user_id';
         $stmt = $this->getConnection()->prepare($sql);
         $stmt->bindValue(':id', $id, \PDO::PARAM_INT);
+        $stmt->bindValue(':user_id', $userId, \PDO::PARAM_INT);
         $stmt->execute();
     }
 }

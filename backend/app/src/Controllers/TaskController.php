@@ -97,9 +97,16 @@ class TaskController extends Controller
                 return $this->sendErrorResponse('Invalid request body', 400);
             }
 
-            $task = new Task($data);
-            $task->id = $existingTask->id;
-            $task->userId = $existingTask->userId;
+            $task = new Task([
+                'id' => $existingTask->id,
+                'user_id' => $existingTask->userId,
+                'title' => $data['title'] ?? $existingTask->title,
+                'description' => $data['description'] ?? $existingTask->description,
+                'category_id' => array_key_exists('category_id', $data) ? $data['category_id'] : $existingTask->categoryId,
+                'priority' => $data['priority'] ?? $existingTask->priority,
+                'status' => $data['status'] ?? $existingTask->status,
+                'due_date' => $data['due_date'] ?? $data['dueDate'] ?? $existingTask->dueDate,
+            ]);
 
             $this->taskService->update($task);
 
@@ -163,7 +170,7 @@ class TaskController extends Controller
                 return;
             }
 
-            $this->taskService->delete($task->id);
+            $this->taskService->delete($task->id, (int)$user->id);
 
             return $this->sendSuccessResponse();
         } catch (\Exception $e) {

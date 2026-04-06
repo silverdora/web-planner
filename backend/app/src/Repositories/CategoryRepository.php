@@ -37,25 +37,31 @@ class CategoryRepository extends Repository implements ICategoryRepository
     public function getAll(): array
     {
         $sql = 'SELECT id, user_id, name FROM categories';
-        $result = $this->getConnection()->query($sql);
+        $stmt = $this->getConnection()->query($sql);
 
-        return $result->fetchAll(\PDO::FETCH_CLASS, '\App\Models\Category');
+        $rows = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        $categories = [];
+        foreach ($rows as $row) {
+            $categories[] = new Category($row);
+        }
+
+        return $categories;
     }
 
     public function getById(int $id): ?Category
     {
         $sql = 'SELECT id, user_id, name
-                FROM categories
-                WHERE id = :id';
+            FROM categories
+            WHERE id = :id';
 
         $stmt = $this->getConnection()->prepare($sql);
         $stmt->bindValue(':id', $id, \PDO::PARAM_INT);
         $stmt->execute();
 
-        $stmt->setFetchMode(\PDO::FETCH_CLASS, '\App\Models\Category');
-        $category = $stmt->fetch();
+        $row = $stmt->fetch(\PDO::FETCH_ASSOC);
 
-        return $category ?: null;
+        return $row ? new Category($row) : null;
     }
 
     public function getByIdAndUserId(int $id, int $userId): ?Category
