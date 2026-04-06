@@ -110,7 +110,14 @@
               :disabled="saving"
           />
 
-          <div />
+          <SelectField
+              :id="`category-${task.id}`"
+              v-model="form.category_id"
+              label="Category"
+              :options="categoryOptions"
+              placeholder="Select category"
+              :disabled="saving"
+          />
         </div>
 
         <p v-if="localError" class="text-sm text-red-600">
@@ -170,7 +177,10 @@ const form = reactive({
   due_date: '',
   priority: '',
   status: '',
+  category_id: '',
 })
+
+
 
 const priorityOptions = [
   { value: 'low', label: 'Low' },
@@ -183,6 +193,18 @@ const statusOptions = [
   { value: 'in progress', label: 'In Progress' },
   { value: 'done', label: 'Done' },
 ]
+
+const categoryOptions = computed(() => [
+  { value: '', label: 'No category' },
+  ...props.categories.map((category) => ({
+    value: String(category.id),
+    label: category.name,
+  })),
+])
+
+const taskCategoryId = computed(() =>
+    String(getTaskValue(['category_id', 'categoryId'], ''))
+)
 
 const normalizePriority = (value) => {
   const normalized = String(value ?? '').toLowerCase()
@@ -278,6 +300,7 @@ const resetForm = () => {
   form.due_date = formatForDateTimeLocal(taskDueDate.value)
   form.priority = normalizePriority(taskPriority.value)
   form.status = normalizeStatus(taskStatus.value)
+  form.category_id = taskCategoryId.value
   statusDraft.value = normalizeStatus(taskStatus.value)
   localError.value = ''
   statusError.value = ''
@@ -309,6 +332,7 @@ const saveEdit = () => {
       due_date: form.due_date || null,
       priority: form.priority || null,
       status: form.status || null,
+      category_id: form.category_id || null,
     },
     onSuccess: () => {
       isEditing.value = false

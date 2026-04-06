@@ -139,10 +139,7 @@ const loadTasks = async () => {
 
 const loadStats = async () => {
   try {
-    const response = await axios.get('/tasks/dashboard-stats', {
-      params: getStatsParams(),
-    })
-
+    const response = await axios.get('/tasks/dashboard-stats')
     stats.value = response.data?.data ?? response.data ?? {
       totalTasks: 0,
       done: 0,

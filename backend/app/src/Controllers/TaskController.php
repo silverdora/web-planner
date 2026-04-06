@@ -53,18 +53,9 @@ class TaskController extends Controller
                 return;
             }
 
-            $filters = [
-                'search' => $_GET['search'] ?? '',
-                'status' => $_GET['status'] ?? '',
-                'priority' => $_GET['priority'] ?? '',
-                'category_id' => $_GET['category_id'] ?? '',
-            ];
-
-            $stats = $this->taskService->getDashboardStats((int)$user->id, $filters);
+            $stats = $this->taskService->getDashboardStats((int)$user->id);
 
             return $this->sendSuccessResponse($stats);
-        } catch (\InvalidArgumentException $e) {
-            return $this->sendErrorResponse($e->getMessage(), 400);
         } catch (\Exception $e) {
             return $this->sendErrorResponse('Internal server error', 500);
         }
