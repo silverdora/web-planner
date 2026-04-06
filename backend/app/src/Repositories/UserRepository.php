@@ -1,13 +1,9 @@
 <?php
 
-// NOTE: we are using a simplified file based storage for demo purposes
-// For your assignment, you should use a database
-
 namespace App\Repositories;
 
 use App\Framework\Repository;
 use App\Models\User;
-use App\Utils\JsonStore;
 use PDO;
 
 class UserRepository extends Repository implements IUserRepository

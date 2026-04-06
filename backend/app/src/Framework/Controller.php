@@ -66,15 +66,6 @@ class Controller
         return json_decode($input, true);
     }
 
-    private function snakeToCamel(string $value): string
-    {
-        return preg_replace_callback(
-            '/_([a-z])/',
-            fn($matches) => strtoupper($matches[1]),
-            $value
-        );
-    }
-
     protected function requireAuth()
     {
         $user = $this->getAuthenticatedUser();
